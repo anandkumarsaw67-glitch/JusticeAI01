@@ -1149,7 +1149,49 @@
       btn.textContent = '🎤 Speak Your Problem';
       btn.classList.remove('listening');
     };
-    recognition.start();
+    recognition.start();<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+  // आपका पर्सनल Firebase Config (जो फोटो में है)
+  const firebaseConfig = {
+    apiKey: "AIzaSyCpd1VB70x08GJHDcu6Xv0-7ZvgS0qVJ2M",
+    authDomain: "justice01-cb713.firebaseapp.com",
+    projectId: "justice01-cb713",
+    storageBucket: "justice01-cb713.firebasestorage.app",
+    messagingSenderId: "587097965602",
+    appId: "1:587097965602:web:65e4a36d56f1e9eab9f67b",
+    measurementId: "G-LXY22JWYSQ"
+  };
+
+  // Firebase Initialize करें
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth();
+  const provider = new GoogleAuthProvider();
+
+  // लॉगिन बटन पर क्लिक करने का फंक्शन
+  // ध्यान दें: आपके बटन की id 'google-btn' होनी चाहिए
+  const googleBtn = document.getElementById('google-btn');
+  
+  if (googleBtn) {
+    googleBtn.addEventListener('click', () => {
+      signInWithPopup(auth, provider)
+        .then((result) => {
+          const user = result.user;
+          console.log("Login Success:", user.displayName);
+          alert("Welcome to Justice AI, " + user.displayName + "!");
+          
+          // लॉगिन के बाद यूजर को कहाँ भेजना है (जैसे dashboard.html)
+          window.location.href = "index.html"; 
+        })
+        .catch((error) => {
+          console.error("Error:", error.message);
+          alert("Login Failed: " + error.message);
+        });
+    });
+  }
+</script>
+
   }
 </script>
 </body>
