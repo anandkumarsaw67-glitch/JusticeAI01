@@ -1,5 +1,4 @@
-const dotenv = require("dotenv");
-dotenv.config();
+require('dotenv').config();
 const express = require("express");
 const cors = require("cors");
 const fs = require("fs");
@@ -24,7 +23,7 @@ app.use(cors());
 // ─── CONFIG ──────────────────────────────────────────────────────────────────
 // Using Groq (free tier — https://console.groq.com) with llama3 model
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
-const GROQ_MODEL   = "llama3-70b-8192"; // Free & fast Groq model
+const GROQ_MODEL   = "openai/gpt-oss-120b"; // Free & fast Groq model
 
 const SYSTEM_PROMPT = `You are Justice AI, a highly knowledgeable and empathetic AI legal assistant. 
 Your role is to:
