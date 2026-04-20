@@ -35,9 +35,9 @@ Always be professional, compassionate, and thorough. Format your responses clear
 // ─────────────────────────────────────────────────────────────────────────────
 
 // TEST ROUTE
-app.get("/", (req, res) => {
-  res.send("Justice AI Server running ✅ (Groq powered)");
-});
+// app.get("/", (req, res) => {
+//   res.send("Justice AI Server running ✅ (Groq powered)");
+// });
 
 // AUTHENTICATION
 app.post("/signup", (req, res) => {
