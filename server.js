@@ -2,6 +2,7 @@ require("dotenv").config({ path: __dirname + '/.env' });
 const express = require("express");
 const cors = require("cors");
 const fs = require("fs");
+const path = require("path");
 
 function loadUsers() {
   try {
@@ -35,9 +36,9 @@ Always be professional, compassionate, and thorough. Format your responses clear
 // ─────────────────────────────────────────────────────────────────────────────
 
 // TEST ROUTE
-// app.get("/", (req, res) => {
-//   res.send("Justice AI Server running ✅ (Groq powered)");
-// });
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "./index.html"));
+});
 
 // AUTHENTICATION
 app.post("/signup", (req, res) => {
