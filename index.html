@@ -269,6 +269,11 @@
       background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08);
       border-top-left-radius: 4px; color: #e2e8f0;
     }
+    .bubble-image {
+      max-width: 250px; border-radius: 12px; border: 1px solid rgba(255,255,255,.1);
+      cursor: pointer; transition: transform .2s;
+    }
+    .bubble-image:hover { transform: scale(1.02); }
     .typing-bubble { display: flex; align-items: center; gap: 5px; padding: 14px; }
     .dot { width: 7px; height: 7px; border-radius: 50%; background: #8b5cf6; animation: typingDot 1.2s infinite; }
     .dot:nth-child(2){animation-delay:.2s;} .dot:nth-child(3){animation-delay:.4s;}
@@ -312,7 +317,64 @@
     .btn-voice.listening { background: #dc2626; animation: vPulse .8s infinite; }
     @keyframes vPulse { 0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.4);} 70%{box-shadow:0 0 0 10px rgba(220,38,38,0);} }
     .btn-voice:hover { filter: brightness(1.1); }
+    .btn-media {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 10px 20px; border-radius: 12px; border: none; cursor: pointer;
+      background: #7c3aed; color: #fff; font-weight: 600; font-size: 13px;
+      transition: all .3s;
+    }
+    .btn-media:hover { filter: brightness(1.1); transform: scale(1.03); }
+    .btn-gallery {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 10px 20px; border-radius: 12px; border: none; cursor: pointer;
+      background: #0891b2; color: #fff; font-weight: 600; font-size: 13px;
+      transition: all .3s;
+    }
+    .btn-gallery:hover { filter: brightness(1.1); transform: scale(1.03); }
     .hint-text { font-size: 11px; color: #4b5563; }
+
+    /* Media URL Modal */
+    .media-modal {
+      background: rgba(15,15,25,.95); border: 1px solid rgba(139,92,246,.3);
+      border-radius: 20px; padding: 28px; max-width: 500px; width: 100%;
+      position: relative;
+    }
+    .media-modal h3 {
+      font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 700;
+      margin-bottom: 8px; color: #fff;
+    }
+    .media-modal p {
+      font-size: 14px; color: #9ca3af; margin-bottom: 20px;
+    }
+    .media-modal input {
+      width: 100%; background: rgba(255,255,255,.06); border: 1px solid #374151;
+      border-radius: 12px; padding: 14px 16px; color: #fff;
+      font-family: inherit; font-size: 14px; outline: none; margin-bottom: 16px;
+    }
+    .media-modal input:focus { border-color: rgba(139,92,246,.5); box-shadow: 0 0 0 3px rgba(139,92,246,.12); }
+    .media-modal input::placeholder { color: #4b5563; }
+    .media-modal-btns { display: flex; gap: 12px; justify-content: flex-end; }
+    .media-modal .btn-cancel {
+      padding: 10px 20px; border-radius: 12px; border: 1px solid #374151;
+      background: transparent; color: #9ca3af; font-weight: 600; font-size: 13px;
+      cursor: pointer; transition: all .2s;
+    }
+    .media-modal .btn-cancel:hover { color: #fff; border-color: #6b7280; }
+    .media-modal .btn-analyze {
+      padding: 10px 20px; border-radius: 12px; border: none; cursor: pointer;
+      background: linear-gradient(to right,#2563eb,#7c3aed); color: #fff;
+      font-weight: 600; font-size: 13px; transition: all .3s;
+    }
+    .media-modal .btn-analyze:hover { filter: brightness(1.1); }
+    .media-modal .btn-analyze:disabled { opacity: .45; cursor: not-allowed; }
+    .media-result {
+      margin-top: 16px; padding: 16px; border-radius: 12px;
+      background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
+      max-height: 200px; overflow-y: auto; display: none;
+    }
+    .media-result.show { display: block; }
+    .media-result h4 { font-size: 14px; font-weight: 600; color: #a78bfa; margin-bottom: 8px; }
+    .media-result p { font-size: 13px; color: #e2e8f0; line-height: 1.6; margin: 0; }
 
     /* ══════════════════════════════════════════════════
        ABOUT PAGE
@@ -375,8 +437,89 @@
     .feature-card:hover .feature-more { opacity: 1; }
 
     /* ══════════════════════════════════════════════════
-       AUTH PAGES (Login / Signup / Forgot)
+       DOCUMENTS PAGE
     ══════════════════════════════════════════════════ */
+    #page-documents { padding: 120px 20px 80px; max-width: 1200px; margin: 0 auto; }
+    .docs-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-top: 48px; }
+    .doc-card {
+      padding: 32px; border-radius: 20px; 
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex; flex-direction: column; justify-content: space-between;
+    }
+    .doc-card:hover { 
+      transform: translateY(-8px) scale(1.02); 
+      background: rgba(255,255,255,0.05);
+      border-color: rgba(139,92,246,0.3);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    }
+    .doc-icon { font-size: 40px; margin-bottom: 20px; }
+    .doc-title { font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 12px; }
+    .doc-desc { font-size: 14px; color: #9ca3af; line-height: 1.6; margin-bottom: 24px; }
+    .btn-view-doc {
+      width: 100%; padding: 12px; border-radius: 12px; border: 1px solid rgba(139,92,246,0.3);
+      background: rgba(139,92,246,0.1); color: #c4b5fd; font-weight: 600; font-size: 14px;
+      cursor: pointer; transition: all 0.3s; text-align: center; text-decoration: none;
+    }
+    .btn-view-doc:hover { background: #7c3aed; color: #fff; transform: translateY(-2px); }
+
+    /* ══════════════════════════════════════════════════
+       ADVOCATES PAGE
+    ══════════════════════════════════════════════════ */
+    #page-advocates { padding: 120px 20px 80px; max-width: 1200px; margin: 0 auto; }
+    .search-container {
+      max-width: 800px; margin: 40px auto; padding: 32px;
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+    }
+    .search-row { display: flex; gap: 12px; flex-wrap: wrap; }
+    .search-input-wrap { flex: 1; position: relative; min-width: 200px; }
+    .search-input-wrap i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #6b7280; }
+    .search-input {
+      width: 100%; padding: 14px 16px 14px 44px; border-radius: 14px;
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      color: #fff; font-size: 15px; outline: none; transition: all 0.3s;
+    }
+    .search-input:focus { border-color: #8b5cf6; background: rgba(255,255,255,0.08); box-shadow: 0 0 0 4px rgba(139,92,246,0.1); }
+    .search-btn {
+      padding: 14px 28px; border-radius: 14px; border: none;
+      background: linear-gradient(to right, #3b82f6, #8b5cf6);
+      color: #fff; font-weight: 700; cursor: pointer; transition: all 0.3s;
+    }
+    .search-btn:hover { transform: translateY(-2px); filter: brightness(1.1); box-shadow: 0 10px 20px rgba(59,130,246,0.3); }
+    
+    .filter-chips { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; justify-content: center; }
+    .chip {
+      padding: 8px 16px; border-radius: 99px; background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1); color: #9ca3af; font-size: 13px;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .chip.active { background: rgba(139,92,246,0.15); border-color: #8b5cf6; color: #c4b5fd; }
+    .chip:hover:not(.active) { background: rgba(255,255,255,0.1); color: #fff; }
+
+    .advocates-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; margin-top: 40px; }
+    .adv-card {
+      padding: 24px; border-radius: 20px; background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08); transition: all 0.3s;
+    }
+    .adv-card:hover { transform: translateY(-6px); background: rgba(255,255,255,0.05); border-color: rgba(139,92,246,0.3); }
+    .adv-header { display: flex; gap: 16px; align-items: center; margin-bottom: 16px; }
+    .adv-img { width: 64px; height: 64px; border-radius: 16px; object-fit: cover; background: #1e293b; }
+    .adv-info h4 { font-size: 18px; margin-bottom: 4px; color: #fff; }
+    .adv-spec { font-size: 12px; color: #a78bfa; font-weight: 600; text-transform: uppercase; }
+    .adv-stats { display: flex; gap: 16px; margin-bottom: 16px; padding: 12px; background: rgba(255,255,255,0.02); border-radius: 12px; }
+    .stat-item { flex: 1; text-align: center; }
+    .stat-val-sm { display: block; font-weight: 700; color: #fff; font-size: 14px; }
+    .stat-label-sm { display: block; font-size: 10px; color: #6b7280; text-transform: uppercase; }
+    .adv-footer { display: flex; gap: 10px; }
+    .btn-contact {
+      flex: 1; padding: 10px; border-radius: 10px; border: none;
+      background: rgba(139,92,246,0.1); color: #c4b5fd; font-weight: 600; font-size: 13px;
+      cursor: pointer; transition: 0.3s; text-align: center;
+    }
+    .btn-contact:hover { background: #7c3aed; color: #fff; }
+    .no-results { text-align: center; padding: 60px; color: #4b5563; }
+
     .auth-page {
       min-height: 100vh; display: flex; align-items: center;
       justify-content: center; padding: 100px 20px 60px;
@@ -412,7 +555,41 @@
       font-size: 16px; transition: color .2s;
     }
     .toggle-pass:hover { color: #9ca3af; }
+    .form-input:focus ~ .form-label, .form-input:not(:placeholder-shown) ~ .form-label {
+      color: #a78bfa;
+    }
     .form-row { display: flex; justify-content: flex-end; margin-top: 6px; }
+    .form-group { position: relative; margin-bottom: 24px; }
+    .form-input {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.1);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .form-input:focus {
+      background: rgba(255,255,255,0.07);
+      border-color: #8b5cf6;
+      box-shadow: 0 0 20px rgba(139,92,246,0.15);
+      transform: translateY(-1px);
+    }
+    .btn-auth {
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-auth::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    .btn-auth:hover::after {
+      opacity: 1;
+    }
     .form-link { font-size: 12px; color: #a78bfa; text-decoration: none; cursor: pointer; }
     .form-link:hover { color: #c4b5fd; }
     .btn-auth {
@@ -489,6 +666,8 @@
       <li><a onclick="showPage('home')" id="nav-home" class="active">Home</a></li>
       <li><a onclick="document.getElementById('about-section').scrollIntoView({behavior:'smooth'})">About Us</a></li>
       <li><a onclick="document.getElementById('features-section').scrollIntoView({behavior:'smooth'})">Features</a></li>
+      <li><a onclick="showPage('documents')" id="nav-documents">Documents</a></li>
+      <li><a onclick="showPage('advocates')" id="nav-advocates">Find Advocate</a></li>
       <li><a onclick="openModal('login')" id="nav-login">Login</a></li>
       <li><a onclick="openModal('signup')" id="nav-signup">New Account</a></li>
     </ul>
@@ -501,6 +680,8 @@
     <a onclick="showPage('home');toggleMenu()">🏠 Home</a>
     <a onclick="showPage('about');toggleMenu()">ℹ️ About Us</a>
     <a onclick="showPage('features');toggleMenu()">⭐ Features</a>
+    <a onclick="showPage('documents');toggleMenu()">📄 Documents</a>
+    <a onclick="showPage('advocates');toggleMenu()">⚖️ Find Advocate</a>
     <a onclick="openModal('login');toggleMenu()">🔐 Login</a>
     <a onclick="openModal('signup');toggleMenu()">🆕 New Account</a>
   </div>
@@ -585,7 +766,14 @@
             <button class="btn-voice" id="voiceBtn" onclick="toggleVoice()">
               🎤 Speak Your Problem
             </button>
+            <button class="btn-media" id="mediaBtn" onclick="openMediaModal()">
+              🔗 Analyze URL
+            </button>
+            <button class="btn-gallery" id="galleryBtn" onclick="document.getElementById('imageInput').click()">
+              🖼️ Send Image
+            </button>
           </div>
+          <input type="file" id="imageInput" accept="image/*" style="display:none;" onchange="handleImageUpload(event)">
           <span class="hint-text">Enter to send · Shift+Enter = new line</span>
         </div>
       </div>
@@ -720,6 +908,128 @@
   </footer>
 </div>
 
+<!-- ════════════════════════════════════════════
+     PAGE: DOCUMENTS
+════════════════════════════════════════════ -->
+<div id="page-documents" class="page">
+  <div style="text-align:center; margin-bottom:40px; padding-top:40px;">
+    <div class="section-badge badge-purple fade-up">Legal Library</div>
+    <h2 class="section-title fade-up">Document Templates</h2>
+    <p style="color:#6b7280; max-width:600px; margin:0 auto; line-height:1.7;" class="fade-up">
+      Access our library of professionally drafted legal document samples and templates. 
+      Click on any document to view a sample PDF.
+    </p>
+  </div>
+
+  <div class="docs-grid">
+    <!-- FIR Card -->
+    <div class="doc-card fade-up">
+      <div class="doc-icon">👮</div>
+      <div class="doc-title">FIR Default Legal Notice</div>
+      <div class="doc-desc">Standard legal notice template for filing a First Information Report (FIR) with law enforcement.</div>
+      <a href="https://docs.google.com/document/d/1gcdSrGicv0ZPO6nIde-4Q5zkdF-3qssg6ay_Pb2vz48/edit?tab=t.0" target="_blank" class="btn-view-doc">📄 View Sample PDF</a>
+    </div>
+
+    <!-- RTI Card -->
+    <div class="doc-card fade-up">
+      <div class="doc-icon">ℹ️</div>
+      <div class="doc-title">RTI Applications</div>
+      <div class="doc-desc">Request information from public authorities under the Right to Information Act with these templates.</div>
+      <a href="https://rajnivas.py.gov.in/rtirnpy/RTI-appln-form.pdf" target="_blank" class="btn-view-doc">📄 View Sample PDF</a>
+    </div>
+
+    <!-- Customer Complaints Card -->
+    <div class="doc-card fade-up">
+      <div class="doc-icon">🛍️</div>
+      <div class="doc-title">Customer Complaints</div>
+      <div class="doc-desc">Formal templates for consumer complaints regarding products, services, or unfair trade practices.</div>
+      <a href="https://www.jotform.com/form-templates/customer-complaint-form" target="_blank" class="btn-view-doc">📄 View Sample Template</a>
+    </div>
+
+    <!-- Cyber Complaints Card -->
+    <div class="doc-card fade-up">
+      <div class="doc-icon">💻</div>
+      <div class="doc-title">Cyber Complaints</div>
+      <div class="doc-desc">Templates for reporting online fraud, harassment, data breaches, and other cyber-related crimes.</div>
+      <a href="https://www.varimanglobal.com/investor/cyber-crime-complaint-receipt.pdf" target="_blank" class="btn-view-doc">📄 View Sample PDF</a>
+    </div>
+
+    <!-- Legal Notice Card -->
+    <div class="doc-card fade-up">
+      <div class="doc-icon">⚖️</div>
+      <div class="doc-title">Legal Notice</div>
+      <div class="doc-desc">General legal notice templates for various civil and criminal matters to formally initiate legal proceedings.</div>
+      <a href="https://www.scribd.com/document/768543336/Legal-Notice-Format" target="_blank" class="btn-view-doc">📄 View Sample Format</a>
+    </div>
+  </div>
+
+  <div style="margin-top: 60px; text-align: center; padding: 40px;" class="glass fade-up">
+    <h3 style="margin-bottom: 12px;">Need a Custom Document?</h3>
+    <p style="color: #9ca3af; margin-bottom: 24px;">Our AI can help you draft a personalized legal document based on your specific situation.</p>
+    <button class="btn-primary" onclick="showPage('home'); document.getElementById('chatSection').scrollIntoView({behavior:'smooth'})">
+      ⚖️ Ask Justice AI to Draft →
+    </button>
+  </div>
+
+  <footer style="margin-top: 80px;">
+    <div class="footer-logo">
+      <div style="width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:14px;">⚖️</div>
+      <span style="font-weight:700;font-size:14px;background:linear-gradient(to right,#60a5fa,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Justice AI</span>
+    </div>
+    <p>&copy; <span id="year-docs"></span> Justice AI. All rights reserved.</p>
+    <div class="footer-links">
+      <a href="#">Privacy</a><a href="#">Terms</a><a href="#">Contact</a>
+    </div>
+  </footer>
+</div>
+
+<!-- ════════════════════════════════════════════
+     PAGE: ADVOCATES (FIND ADVOCATE)
+════════════════════════════════════════════ -->
+<div id="page-advocates" class="page">
+  <div style="text-align:center; margin-bottom:20px; padding-top:40px;">
+    <div class="section-badge badge-blue fade-up">Legal Experts</div>
+    <h2 class="section-title fade-up">Find the Best Advocate</h2>
+    <p style="color:#6b7280; max-width:600px; margin:0 auto; line-height:1.7;" class="fade-up">
+      Search for top-rated legal professionals near you or in any specific city.
+    </p>
+  </div>
+
+  <div class="search-container fade-up">
+    <div class="search-row">
+      <div class="search-input-wrap">
+        <i class="search-icon">📍</i>
+        <input type="text" id="advocateSearchInput" class="search-input" placeholder="Enter City (e.g. New York, Delhi, London)..." onkeyup="if(event.key==='Enter') searchAdvocates()">
+        <button id="detectLocBtn" onclick="detectLocation()" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:rgba(139,92,246,0.1); border:1px solid rgba(139,92,246,0.3); color:#c4b5fd; padding:6px 12px; border-radius:10px; font-size:12px; cursor:pointer; transition:0.3s;" title="Detect My Location">🎯 Auto-Detect</button>
+      </div>
+      <button class="search-btn" onclick="searchAdvocates()">🔍 Search Advocates</button>
+    </div>
+    
+    <div class="filter-chips">
+      <div class="chip active" onclick="setSpecialization('All', this)">All</div>
+      <div class="chip" onclick="setSpecialization('Criminal', this)">Criminal</div>
+      <div class="chip" onclick="setSpecialization('Family', this)">Family</div>
+      <div class="chip" onclick="setSpecialization('Corporate', this)">Corporate</div>
+      <div class="chip" onclick="setSpecialization('Cyber', this)">Cyber</div>
+    </div>
+  </div>
+
+  <div id="advocatesResults" class="advocates-grid">
+    <!-- Results will be injected here -->
+    <div class="no-results">
+      <p>Enter a city to find the best advocates in that location.</p>
+    </div>
+  </div>
+
+  <footer style="margin-top: 80px;">
+    <div class="footer-logo">
+      <div style="width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:14px;">⚖️</div>
+      <span style="font-weight:700;font-size:14px;background:linear-gradient(to right,#60a5fa,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Justice AI</span>
+    </div>
+    <p>&copy; <span id="year-adv"></span> Justice AI. All rights reserved.</p>
+  </footer>
+</div>
+
 
 
 <!-- ════════════════════════════════════════════
@@ -734,8 +1044,8 @@
         <div class="auth-sub">Sign in to your Justice AI account</div>
 
         <div class="form-group">
-          <label class="form-label">Username</label>
-          <input class="form-input" type="text" id="loginUsername" placeholder="Enter your username" />
+          <label class="form-label">Username or Email ID</label>
+          <input class="form-input" type="text" id="loginUsername" placeholder="Enter your username or email id" />
         </div>
         <div class="form-group">
           <label class="form-label">Password</label>
@@ -747,7 +1057,7 @@
         </div>
 
         <button class="btn-auth" style="background:linear-gradient(to right,#2563eb,#7c3aed);" onclick="doLogin()">
-          🔐 Login
+          🔐 Login with Username & Password
         </button>
 
         <div class="auth-divider"><span>or</span></div>
@@ -787,8 +1097,8 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">Username</label>
-          <input class="form-input" type="text" id="signupUsername" placeholder="Choose a username" />
+          <label class="form-label">Username or Email ID</label>
+          <input class="form-input" type="text" id="signupUsername" placeholder="Choose a username or email id" />
         </div>
         <div class="form-group">
           <label class="form-label">Password</label>
@@ -840,8 +1150,8 @@
         <div class="auth-sub">Enter your username and new password</div>
 
         <div class="form-group">
-          <label class="form-label">Username</label>
-          <input class="form-input" type="text" id="resetUsername" placeholder="Enter your username" />
+          <label class="form-label">Username or Email ID</label>
+          <input class="form-input" type="text" id="resetUsername" placeholder="Enter your username or email id" />
         </div>
         <div class="form-group">
           <label class="form-label">New Password</label>
@@ -862,6 +1172,66 @@
     </div>
 </div>
 
+<!-- ════════════════════════════════════════════
+     PAGE: SETTINGS
+     ════════════════════════════════════════════ -->
+<div id="page-settings" class="modal-overlay">
+  <div class="auth-card glass">
+    <button class="modal-close" onclick="closeModal('settings')">×</button>
+    <div class="auth-inner">
+      <div class="auth-logo" style="background:linear-gradient(135deg,#10b981,#3b82f6);">⚙️</div>
+      <div class="auth-title">Account Settings</div>
+      <div class="auth-sub">Customize your profile and preferences</div>
+
+      <div class="form-group">
+        <label class="form-label">New Username</label>
+        <input class="form-input" type="text" id="settingsNewUsername" placeholder="Enter new username" />
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">Current Password</label>
+        <div class="form-input-wrap">
+          <input class="form-input" type="password" id="settingsPassword" placeholder="Confirm with password" style="padding-right:44px;" />
+          <button class="toggle-pass" onclick="toggleField('settingsPassword',this)">👁️</button>
+        </div>
+      </div>
+
+      <button class="btn-auth" style="background:linear-gradient(to right,#10b981,#3b82f6);" onclick="doUpdateUsername()">
+        💾 Save Changes
+      </button>
+
+      <div class="auth-footer" style="margin-top:20px;">
+        <a onclick="closeModal('settings')" style="color:#6b7280;">Cancel</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     MEDIA URL ANALYZE MODAL
+     ════════════════════════════════════════════ -->
+<div id="page-media" class="modal-overlay">
+  <div class="media-modal glass">
+    <button class="modal-close" onclick="closeModal('media')">×</button>
+    <h3>🔗 Analyze URL</h3>
+    <p>Enter a news article, case file, or legal document URL to analyze.</p>
+    
+    <input type="url" id="mediaUrl" placeholder="https://example.com/article" />
+    
+    <div class="media-modal-btns">
+      <button class="btn-cancel" onclick="closeModal('media')">Cancel</button>
+      <button class="btn-analyze" id="analyzeBtn" onclick="analyzeMedia()">
+        ⚖️ Analyze
+      </button>
+    </div>
+    
+    <div class="media-result" id="mediaResult">
+      <h4>📊 Analysis Result</h4>
+      <p id="mediaResultContent"></p>
+    </div>
+  </div>
+</div>
+
 <!-- Back to top -->
 <button id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
 
@@ -874,7 +1244,10 @@
   let recognition = null;
 
   // ── Year
-  document.getElementById('year').textContent = new Date().getFullYear();
+  const yearStr = new Date().getFullYear();
+  if(document.getElementById('year')) document.getElementById('year').textContent = yearStr;
+  if(document.getElementById('year-docs')) document.getElementById('year-docs').textContent = yearStr;
+  if(document.getElementById('year-adv')) document.getElementById('year-adv').textContent = yearStr;
 
   // ── SPA Navigation
   function showPage(name) {
@@ -896,13 +1269,33 @@
 
   // ── Modal Actions
   function openModal(id) {
+    // Hide all modals first
     document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
-    document.getElementById('page-' + id).classList.add('active');
+    // Show the requested modal
+    const modal = document.getElementById('page-' + id);
+    if (modal) {
+      modal.classList.add('active');
+      // Focus on first input field
+      setTimeout(() => {
+        const firstInput = modal.querySelector('input');
+        if (firstInput) firstInput.focus();
+      }, 100);
+    }
   }
 
   function closeModal(id) {
-    document.getElementById('page-' + id).classList.remove('active');
+    const modal = document.getElementById('page-' + id);
+    if (modal) {
+      modal.classList.remove('active');
+    }
   }
+
+  // Close modal when clicking outside
+  document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('modal-overlay') && e.target.classList.contains('active')) {
+      e.target.classList.remove('active');
+    }
+  });
 
   // ── Mobile Menu
   function toggleMenu() {
@@ -950,7 +1343,18 @@
   async function doLogin() {
     const username = document.getElementById('loginUsername').value.trim();
     const password = document.getElementById('loginPassword').value;
-    if (!username || !password) return alert('Please fill in all fields.');
+    
+    // Validation
+    if (!username || !password) {
+      showAuthError('login', 'Please fill in all fields.');
+      return;
+    }
+
+    // Show loading state
+    const btn = document.querySelector('#page-login .btn-auth');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '⏳ Logging in...';
+    btn.disabled = true;
 
     try {
       const res = await fetch(API + '/login', {
@@ -959,15 +1363,152 @@
         body: JSON.stringify({ username, password })
       });
       const data = await res.json();
+      
       if (data.success) {
         localStorage.setItem('user', username);
-        alert('✅ Login successful! Welcome, ' + username);
-        closeModal('login');
+        localStorage.setItem('isLoggedIn', 'true');
+        showAuthSuccess('login', '✅ Login successful! Redirecting...');
+        
+        // Update navbar
+        updateNavbarForLoggedInUser(username);
+        
+        setTimeout(() => {
+          closeModal('login');
+          clearAuthFields('login');
+        }, 1500);
       } else {
-        alert('❌ ' + data.message);
+        showAuthError('login', data.message || 'Invalid credentials.');
       }
     } catch (e) {
-      alert('❌ Cannot reach server. Is the backend running?');
+      console.error('Login error:', e);
+      showAuthError('login', 'Cannot reach server. Is the backend running on port 3000?');
+    } finally {
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+    }
+  }
+
+  // Helper functions for auth feedback
+  function showAuthError(pageId, message) {
+    const page = document.getElementById('page-' + pageId);
+    let errorDiv = page.querySelector('.auth-error');
+    if (!errorDiv) {
+      errorDiv = document.createElement('div');
+      errorDiv.className = 'auth-error';
+      errorDiv.style.cssText = 'margin-bottom:16px;padding:12px 16px;border-radius:10px;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:#fca5a5;font-size:13px;';
+      const firstGroup = page.querySelector('.form-group');
+      page.querySelector('.auth-inner').insertBefore(errorDiv, firstGroup);
+    }
+    errorDiv.textContent = message;
+    errorDiv.style.display = 'block';
+  }
+
+  function showAuthSuccess(pageId, message) {
+    const page = document.getElementById('page-' + pageId);
+    let successDiv = page.querySelector('.auth-success');
+    if (!successDiv) {
+      successDiv = document.createElement('div');
+      successDiv.className = 'auth-success';
+      successDiv.style.cssText = 'margin-bottom:16px;padding:12px 16px;border-radius:10px;background:rgba(52,211,153,.15);border:1px solid rgba(52,211,153,.3);color:#6ee7b7;font-size:13px;';
+      const firstGroup = page.querySelector('.form-group');
+      page.querySelector('.auth-inner').insertBefore(successDiv, firstGroup);
+    }
+    successDiv.textContent = message;
+    successDiv.style.display = 'block';
+    // Hide any error
+    const errorDiv = page.querySelector('.auth-error');
+    if (errorDiv) errorDiv.style.display = 'none';
+  }
+
+  function clearAuthFields(pageId) {
+    const page = document.getElementById('page-' + pageId);
+    page.querySelectorAll('input').forEach(input => input.value = '');
+    const errorDiv = page.querySelector('.auth-error');
+    if (errorDiv) errorDiv.style.display = 'none';
+    const successDiv = page.querySelector('.auth-success');
+    if (successDiv) successDiv.style.display = 'none';
+  }
+
+  function updateNavbarForLoggedInUser(username) {
+    const navLinks = document.querySelector('.nav-links');
+    navLinks.innerHTML = `
+      <li><a onclick="showPage('home')" id="nav-home" class="active">Home</a></li>
+      <li><a onclick="document.getElementById('about-section').scrollIntoView({behavior:'smooth'})">About Us</a></li>
+      <li><a onclick="document.getElementById('features-section').scrollIntoView({behavior:'smooth'})">Features</a></li>
+      <li><a onclick="showPage('documents')" id="nav-documents">Documents</a></li>
+      <li><a onclick="showPage('advocates')" id="nav-advocates">Find Advocate</a></li>
+      <li><a onclick="openModal('settings')">Settings</a></li>
+      <li><a onclick="logout()">Logout (${username})</a></li>
+    `;
+
+    // Also update mobile menu
+    const mobileMenu = document.getElementById('mobileMenu');
+    mobileMenu.innerHTML = `
+      <a onclick="showPage('home');toggleMenu()">🏠 Home</a>
+      <a onclick="showPage('about');toggleMenu()">ℹ️ About Us</a>
+      <a onclick="showPage('features');toggleMenu()">⭐ Features</a>
+      <a onclick="showPage('documents');toggleMenu()">📄 Documents</a>
+      <a onclick="showPage('advocates');toggleMenu()">⚖️ Find Advocate</a>
+      <a onclick="openModal('settings');toggleMenu()">⚙️ Settings</a>
+      <a onclick="logout()">🚪 Logout (${username})</a>
+    `;
+  }
+
+  function logout() {
+    localStorage.removeItem('user');
+    localStorage.removeItem('isLoggedIn');
+    location.reload();
+  }
+
+  // ── SETTINGS: Update Username
+  async function doUpdateUsername() {
+    const oldUsername = localStorage.getItem('user');
+    const newUsername = document.getElementById('settingsNewUsername').value.trim();
+    const password    = document.getElementById('settingsPassword').value;
+
+    if (!newUsername || !password) {
+      showAuthError('settings', 'Please fill in all fields.');
+      return;
+    }
+
+    if (newUsername === oldUsername) {
+      showAuthError('settings', 'New username must be different.');
+      return;
+    }
+
+    const btn = document.querySelector('#page-settings .btn-auth');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '⏳ Saving...';
+    btn.disabled = true;
+
+    try {
+      const res = await fetch(API + '/update-username', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ oldUsername, newUsername, password })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        localStorage.setItem('user', newUsername);
+        showAuthSuccess('settings', '✅ Username updated successfully!');
+        
+        // Update navbar immediately
+        updateNavbarForLoggedInUser(newUsername);
+        
+        setTimeout(() => {
+          closeModal('settings');
+          clearAuthFields('settings');
+        }, 1500);
+      } else {
+        showAuthError('settings', data.message || 'Update failed.');
+      }
+    } catch (e) {
+      console.error('Update username error:', e);
+      showAuthError('settings', 'Server error. Please try again.');
+    } finally {
+      btn.innerHTML = originalText;
+      btn.disabled = false;
     }
   }
 
@@ -976,8 +1517,26 @@
     const username = document.getElementById('signupUsername').value.trim();
     const password = document.getElementById('signupPassword').value;
     const confirm  = document.getElementById('signupConfirm').value;
-    if (!username || !password) return alert('Please fill in all fields.');
-    if (password !== confirm) return alert('❌ Passwords do not match!');
+    
+    // Validation
+    if (!username || !password) {
+      showAuthError('signup', 'Please fill in all fields.');
+      return;
+    }
+    if (password !== confirm) {
+      showAuthError('signup', 'Passwords do not match!');
+      return;
+    }
+    if (password.length < 4) {
+      showAuthError('signup', 'Password must be at least 4 characters.');
+      return;
+    }
+
+    // Show loading state
+    const btn = document.querySelector('#page-signup .btn-auth');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '⏳ Creating account...';
+    btn.disabled = true;
 
     try {
       const res = await fetch(API + '/signup', {
@@ -986,10 +1545,23 @@
         body: JSON.stringify({ username, password })
       });
       const data = await res.json();
-      alert(data.success ? '✅ ' + data.message : '❌ ' + data.message);
-      if (data.success) showPage('login');
+      
+      if (data.success) {
+        showAuthSuccess('signup', '✅ Account created! Redirecting to login...');
+        setTimeout(() => {
+          closeModal('signup');
+          openModal('login');
+          clearAuthFields('signup');
+        }, 1500);
+      } else {
+        showAuthError('signup', data.message || 'Registration failed.');
+      }
     } catch (e) {
-      alert('❌ Cannot reach server. Is the backend running?');
+      console.error('Signup error:', e);
+      showAuthError('signup', 'Cannot reach server. Is the backend running on port 3000?');
+    } finally {
+      btn.innerHTML = originalText;
+      btn.disabled = false;
     }
   }
 
@@ -997,7 +1569,22 @@
   async function doReset() {
     const username    = document.getElementById('resetUsername').value.trim();
     const newPassword = document.getElementById('resetPassword').value;
-    if (!username || !newPassword) return alert('Please fill in all fields.');
+    
+    // Validation
+    if (!username || !newPassword) {
+      showAuthError('forgot', 'Please fill in all fields.');
+      return;
+    }
+    if (newPassword.length < 4) {
+      showAuthError('forgot', 'Password must be at least 4 characters.');
+      return;
+    }
+
+    // Show loading state
+    const btn = document.querySelector('#page-forgot .btn-auth');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '⏳ Resetting password...';
+    btn.disabled = true;
 
     try {
       const res = await fetch(API + '/reset', {
@@ -1006,10 +1593,23 @@
         body: JSON.stringify({ username, newPassword })
       });
       const data = await res.json();
-      alert(data.success ? '✅ ' + data.message : '❌ ' + data.message);
-      if (data.success) showPage('login');
+      
+      if (data.success) {
+        showAuthSuccess('forgot', '✅ Password reset! Redirecting to login...');
+        setTimeout(() => {
+          closeModal('forgot');
+          openModal('login');
+          clearAuthFields('forgot');
+        }, 1500);
+      } else {
+        showAuthError('forgot', data.message || 'Password reset failed.');
+      }
     } catch (e) {
-      alert('❌ Cannot reach server. Is the backend running?');
+      console.error('Reset error:', e);
+      showAuthError('forgot', 'Cannot reach server. Is the backend running on port 3000?');
+    } finally {
+      btn.innerHTML = originalText;
+      btn.disabled = false;
     }
   }
 
@@ -1102,6 +1702,88 @@
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   }
 
+  // ── Image Gallery Feature
+  async function handleImageUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      showError('Please select a valid image file.');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      showError('Image size must be less than 5MB.');
+      return;
+    }
+
+    // Create preview URL
+    const imageUrl = URL.createObjectURL(file);
+    
+    // Add user image bubble
+    addImageBubble('user', imageUrl);
+    
+    // Show typing indicator
+    showTyping();
+
+    // Convert image to base64
+    const reader = new FileReader();
+    reader.onload = async function() {
+      const base64Image = reader.result;
+      
+      try {
+        const res = await fetch(API + '/chat-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            image: base64Image,
+            filename: file.name
+          })
+        });
+        const data = await res.json();
+        removeTyping();
+        addBubble('ai', data.reply || 'Image analyzed. How can I help you with this?');
+      } catch (err) {
+        removeTyping();
+        showError('❌ Could not analyze image. Ensure the backend is running.');
+      }
+    };
+    reader.readAsDataURL(file);
+    
+    // Reset file input
+    event.target.value = '';
+  }
+
+  function addImageBubble(role, imageUrl) {
+    const box = document.getElementById('historyBox');
+    const empty = document.getElementById('emptyState');
+    if (empty) empty.remove();
+
+    const row = document.createElement('div');
+    row.className = `bubble-row ${role}`;
+    row.innerHTML = `
+      <div class="avatar ${role}">${role === 'user' ? '👤' : '⚖️'}</div>
+      <img src="${imageUrl}" class="bubble-image" onclick="openImageModal('${imageUrl}')" title="Click to enlarge">
+    `;
+    box.appendChild(row);
+    box.scrollTop = box.scrollHeight;
+    
+    document.getElementById('clearBtn').style.display = 'block';
+  }
+
+  function openImageModal(url) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay active';
+    modal.innerHTML = `
+      <button class="modal-close" onclick="this.parentElement.remove()">&times;</button>
+      <img src="${url}" style="max-width:90%;max-height:85vh;border-radius:12px;object-fit:contain;">
+    `;
+    document.body.appendChild(modal);
+    modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+  }
+
   function clearHistory() {
     const box = document.getElementById('historyBox');
     box.innerHTML = `<div class="history-empty" id="emptyState">
@@ -1151,6 +1833,228 @@
     };
     recognition.start();
   }
+
+  // ── Media URL Analysis
+  function openMediaModal() {
+    document.getElementById('mediaUrl').value = '';
+    document.getElementById('mediaResult').classList.remove('show');
+    document.getElementById('mediaResultContent').textContent = '';
+    openModal('media');
+  }
+
+  async function analyzeMedia() {
+    const url = document.getElementById('mediaUrl').value.trim();
+    const resultDiv = document.getElementById('mediaResult');
+    const resultContent = document.getElementById('mediaResultContent');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+
+    if (!url) {
+      resultDiv.classList.add('show');
+      resultContent.textContent = 'Please enter a valid URL.';
+      return;
+    }
+
+    // Validate URL format
+    try {
+      new URL(url);
+    } catch (e) {
+      resultDiv.classList.add('show');
+      resultContent.textContent = 'Please enter a valid URL (e.g., https://example.com).';
+      return;
+    }
+
+    analyzeBtn.disabled = true;
+    analyzeBtn.textContent = '⏳ Analyzing...';
+    resultDiv.classList.add('show');
+    resultContent.textContent = 'Fetching and analyzing the URL content...';
+
+    try {
+      const response = await fetch('/analyze-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url })
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.analysis) {
+        resultContent.textContent = data.analysis;
+      } else {
+        resultContent.textContent = data.message || 'Failed to analyze the URL. Please try again.';
+      }
+    } catch (err) {
+      console.error('Media analysis error:', err);
+      resultContent.textContent = 'Error connecting to server. Please try again.';
+    }
+
+    analyzeBtn.disabled = false;
+    analyzeBtn.textContent = '⚖️ Analyze';
+  }
+
+  // ── ADVOCATE FINDER LOGIC
+  let selectedSpec = 'All';
+  const mockAdvocates = [
+    { name: "Sarah Jenkins", city: "New York", spec: "Criminal", exp: 12, rating: 4.9, cases: 450 },
+    { name: "Robert Chen", city: "New York", spec: "Corporate", exp: 15, rating: 4.8, cases: 320 },
+    { name: "Elena Rodriguez", city: "New York", spec: "Family", exp: 8, rating: 4.7, cases: 210 },
+    { name: "Michael Strauss", city: "New York", spec: "Cyber", exp: 7, rating: 4.6, cases: 140 },
+    { name: "Jennifer Wu", city: "New York", spec: "Criminal", exp: 11, rating: 4.8, cases: 380 },
+    { name: "David Goldberg", city: "New York", spec: "Corporate", exp: 22, rating: 5.0, cases: 950 },
+    
+    { name: "Rajesh Sharma", city: "Delhi", spec: "Criminal", exp: 20, rating: 5.0, cases: 800 },
+    { name: "Priya Gupta", city: "Delhi", spec: "Family", exp: 10, rating: 4.6, cases: 180 },
+    { name: "Aman Verma", city: "Delhi", spec: "Cyber", exp: 6, rating: 4.9, cases: 95 },
+    { name: "Sanjay Malhotra", city: "Delhi", spec: "Corporate", exp: 14, rating: 4.7, cases: 290 },
+    { name: "Ananya Iyer", city: "Delhi", spec: "Criminal", exp: 12, rating: 4.8, cases: 410 },
+    { name: "Vikram Singh", city: "Delhi", spec: "Family", exp: 15, rating: 4.9, cases: 530 },
+    
+    { name: "David Miller", city: "London", spec: "Corporate", exp: 18, rating: 4.9, cases: 540 },
+    { name: "James Wilson", city: "London", spec: "Criminal", exp: 14, rating: 4.7, cases: 290 },
+    { name: "Emma Thompson", city: "London", spec: "Cyber", exp: 9, rating: 4.8, cases: 130 },
+    { name: "Oliver Wright", city: "London", spec: "Family", exp: 11, rating: 4.6, cases: 210 },
+    { name: "Sophia Bennett", city: "London", spec: "Corporate", exp: 20, rating: 5.0, cases: 880 },
+    { name: "Thomas Brooks", city: "London", spec: "Criminal", exp: 13, rating: 4.7, cases: 340 }
+  ];
+
+  async function detectLocation() {
+    const btn = document.getElementById('detectLocBtn');
+    const input = document.getElementById('advocateSearchInput');
+    
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser.");
+      return;
+    }
+
+    btn.innerHTML = '⏳ Detecting...';
+    btn.disabled = true;
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        
+        try {
+          // Use OpenStreetMap Nominatim for Reverse Geocoding (Free, no API key required)
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+          const data = await res.json();
+          
+          // Try to get city, town, village, or state
+          const city = data.address.city || data.address.town || data.address.village || data.address.suburb || data.address.state || "India";
+          
+          input.value = city;
+          btn.innerHTML = '✅ Found';
+          searchAdvocates();
+          
+          setTimeout(() => { 
+            btn.innerHTML = '🎯 Auto-Detect';
+            btn.disabled = false;
+          }, 3000);
+        } catch (err) {
+          console.error("Reverse Geocoding error:", err);
+          input.value = "New York"; // Fallback
+          searchAdvocates();
+          btn.innerHTML = '🎯 Auto-Detect';
+          btn.disabled = false;
+        }
+      },
+      (error) => {
+        console.error("Geolocation error:", error);
+        btn.innerHTML = '❌ Failed';
+        btn.disabled = false;
+        alert("Permission denied or location unavailable. Please enter your city manually.");
+        setTimeout(() => btn.innerHTML = '🎯 Auto-Detect', 3000);
+      }
+    );
+  }
+
+  function setSpecialization(spec, el) {
+    selectedSpec = spec;
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    searchAdvocates();
+  }
+
+  function generateAdvocatesForCity(cityName) {
+    const specs = ["Criminal", "Family", "Corporate", "Cyber", "Civil"];
+    const names = [
+      "Adv. Vikram Sethi", "Adv. Anjali Rao", "Adv. Sameer Khan", 
+      "Adv. Meera Nair", "Adv. Rohan Deshmukh", "Adv. Ishani Verma",
+      "Adv. Arjun Kapoor", "Adv. Sneha Kulkarni", "Adv. Faisal Ahmed"
+    ];
+    
+    // Generate 6 diverse advocates for the city
+    return Array.from({ length: 6 }, (_, i) => ({
+      name: names[i % names.length],
+      city: cityName,
+      spec: specs[i % specs.length],
+      exp: 5 + Math.floor(Math.random() * 20),
+      rating: (4.5 + Math.random() * 0.5).toFixed(1),
+      cases: 100 + Math.floor(Math.random() * 900)
+    }));
+  }
+
+  function searchAdvocates() {
+    const rawQuery = document.getElementById('advocateSearchInput').value.trim();
+    const query = rawQuery.toLowerCase();
+    const resultsBox = document.getElementById('advocatesResults');
+    
+    if (!query) {
+      resultsBox.innerHTML = `<div class="no-results"><p>Enter a city to find the best advocates in that location.</p></div>`;
+      return;
+    }
+
+    // Combine static mock data with dynamic generator if needed
+    let filtered = mockAdvocates.filter(adv => {
+      const cityMatch = adv.city.toLowerCase().includes(query);
+      const specMatch = selectedSpec === 'All' || adv.spec === selectedSpec;
+      return cityMatch && specMatch;
+    });
+
+    // If no static results, generate dynamic ones for the city
+    if (filtered.length === 0) {
+      const generated = generateAdvocatesForCity(rawQuery);
+      filtered = generated.filter(adv => selectedSpec === 'All' || adv.spec === selectedSpec);
+    }
+
+    if (filtered.length === 0) {
+      resultsBox.innerHTML = `<div class="no-results"><p>No advocates found for ${selectedSpec} law in this area.</p></div>`;
+      return;
+    }
+
+    resultsBox.innerHTML = `
+      <div style="grid-column:1/-1; margin-bottom:10px;">
+        <h3 style="font-size:16px; color:#fff;">📍 Verified Advocates in ${rawQuery}</h3>
+      </div>
+    ` + filtered.map(adv => `
+      <div class="adv-card fade-up visible">
+        <div class="adv-header">
+          <div class="adv-img" style="display:flex;align-items:center;justify-content:center;font-size:30px;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2);">⚖️</div>
+          <div class="adv-info">
+            <h4>${adv.name}</h4>
+            <div class="adv-spec">${adv.spec} Law</div>
+          </div>
+        </div>
+        <div class="adv-stats">
+          <div class="stat-item"><span class="stat-val-sm">${adv.exp}y</span><span class="stat-label-sm">Exp</span></div>
+          <div class="stat-item"><span class="stat-val-sm">⭐ ${adv.rating}</span><span class="stat-label-sm">Rating</span></div>
+          <div class="stat-item"><span class="stat-val-sm">${adv.cases}+</span><span class="stat-label-sm">Cases</span></div>
+        </div>
+        <p style="font-size:13px; color:#9ca3af; margin-bottom:16px;">Expert legal representation for ${adv.spec.toLowerCase()} matters in ${adv.city}.</p>
+        <div class="adv-footer">
+          <button class="btn-contact" onclick="alert('Connecting you with ${adv.name} for a consultation...')">Connect Now</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ── Initialization
+  window.addEventListener('load', () => {
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    const user = localStorage.getItem('user');
+    if (isLoggedIn && user) {
+      updateNavbarForLoggedInUser(user);
+    }
+  });
 </script>
 </body>
 </html>
