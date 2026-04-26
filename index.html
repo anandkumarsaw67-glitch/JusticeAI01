@@ -121,21 +121,22 @@
       background: linear-gradient(to right,#60a5fa,#a78bfa);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
-    .nav-links { display: flex; align-items: center; gap: 32px; list-style: none; }
+    .nav-links { display: flex; align-items: center; gap: 40px; list-style: none; }
     .nav-links a {
-      color: #9ca3af; font-size: 14px; font-weight: 500;
+      color: #9ca3af; font-size: 16px; font-weight: 500;
       text-decoration: none; transition: color .2s;
       cursor: pointer;
     }
     .nav-links a:hover, .nav-links a.active { color: #fff; }
     .nav-links a.active { color: #a78bfa; text-shadow: 0 0 20px rgba(167,139,250,.5); }
     .nav-cta {
-      padding: 10px 20px; border-radius: 12px; border: none; cursor: pointer;
+      padding: 12px 24px; border-radius: 12px; border: none; cursor: pointer;
       background: linear-gradient(to right,#2563eb,#7c3aed);
-      color: #fff; font-weight: 600; font-size: 14px;
-      box-shadow: 0 0 20px rgba(139,92,246,.3); transition: all .3s;
+      color: #fff; font-weight: 600; font-size: 15px;
+      box-shadow: 0 0 20px rgba(139,92,246,0.3); transition: all .3s;
     }
     .nav-cta:hover { filter: brightness(1.15); transform: scale(1.04); }
+    .nav-right { display: flex; align-items: center; gap: 20px; }
 
     /* mobile menu */
     .hamburger { display: none; background: none; border: none; cursor: pointer; color: #9ca3af; font-size: 22px; }
@@ -520,6 +521,53 @@
     .btn-contact:hover { background: #7c3aed; color: #fff; }
     .no-results { text-align: center; padding: 60px; color: #4b5563; }
 
+    /* ══════════════════════════════════════════════════
+       PROFILE DROPDOWN
+    ══════════════════════════════════════════════════ */
+    .profile-nav-item { position: relative; display: flex; align-items: center; }
+    .profile-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; color: #fff; cursor: pointer;
+      border: 2px solid rgba(255,255,255,0.1);
+      transition: all 0.3s;
+    }
+    .profile-avatar:hover { transform: scale(1.05); border-color: #8b5cf6; box-shadow: 0 0 15px rgba(139,92,246,0.3); }
+    
+    .profile-dropdown {
+      position: absolute; top: 55px; right: 0; min-width: 200px;
+      background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(15px);
+      border: 1px solid rgba(255,255,255,0.1); border-radius: 16px;
+      padding: 8px; display: none; flex-direction: column; z-index: 1000;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    .profile-dropdown.show { display: flex; animation: profileFadeIn 0.3s forwards; }
+    .dropdown-user { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 8px; text-align: left; }
+    .dropdown-user .uname { display: block; font-weight: 700; color: #fff; font-size: 14px; }
+    .dropdown-user .label { display: block; font-size: 11px; color: #9ca3af; text-transform: uppercase; margin-top: 2px; }
+    
+    .dropdown-item {
+      padding: 10px 14px; border-radius: 10px; color: #d1d5db;
+      font-size: 14px; cursor: pointer; transition: 0.2s;
+      display: flex; align-items: center; gap: 10px;
+      text-align: left;
+    }
+    .dropdown-item:hover { background: rgba(139,92,246,0.15); color: #fff; }
+    .dropdown-item.logout { color: #fca5a5; }
+    .dropdown-item.logout:hover { background: rgba(239,68,68,0.1); color: #ef4444; }
+
+    .nav-greeting {
+      font-size: 15px; font-weight: 500; color: #9ca3af;
+      margin-right: 10px; display: flex; align-items: center;
+    }
+    .nav-greeting span { color: #fff; font-weight: 700; margin-left: 6px; }
+
+    @keyframes profileFadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
     .auth-page {
       min-height: 100vh; display: flex; align-items: center;
       justify-content: center; padding: 100px 20px 60px;
@@ -668,11 +716,11 @@
       <li><a onclick="document.getElementById('features-section').scrollIntoView({behavior:'smooth'})">Features</a></li>
       <li><a onclick="showPage('documents')" id="nav-documents">Documents</a></li>
       <li><a onclick="showPage('advocates')" id="nav-advocates">Find Advocate</a></li>
-      <li><a onclick="openModal('login')" id="nav-login">Login</a></li>
-      <li><a onclick="openModal('signup')" id="nav-signup">New Account</a></li>
     </ul>
 
-    <button class="nav-cta" onclick="openModal('login')">Get Started</button>
+    <div class="nav-right" id="navRight">
+      <button class="nav-cta" id="mainCta" onclick="openModal('login')">Get Started</button>
+    </div>
     <button class="hamburger" onclick="toggleMenu()" id="hamburgerBtn">☰</button>
   </div>
 
@@ -1431,28 +1479,71 @@
 
   function updateNavbarForLoggedInUser(username) {
     const navLinks = document.querySelector('.nav-links');
+    const firstLetter = username.charAt(0).toUpperCase();
+    
+    // Hide main CTA
+    const mainCta = document.getElementById('mainCta');
+    if (mainCta) mainCta.style.display = 'none';
+
+    // Inject Profile into nav-right if not already there
+    const navRight = document.getElementById('navRight');
+    navRight.innerHTML = `
+      <div class="nav-greeting">Hello, <span>${username}</span></div>
+      <div class="profile-nav-item">
+        <div class="profile-avatar" onclick="toggleProfileDropdown()">${firstLetter}</div>
+        <div class="profile-dropdown" id="profileDropdown">
+          <div class="dropdown-user">
+            <span class="label">Logged in as</span>
+            <span class="uname">${username}</span>
+          </div>
+          <div class="dropdown-item" onclick="openModal('settings'); toggleProfileDropdown()">
+            <span>⚙️</span> Customize Username
+          </div>
+          <div class="dropdown-item logout" onclick="logout()">
+            <span>🚪</span> Logout
+          </div>
+        </div>
+      </div>
+    `;
+    
     navLinks.innerHTML = `
       <li><a onclick="showPage('home')" id="nav-home" class="active">Home</a></li>
       <li><a onclick="document.getElementById('about-section').scrollIntoView({behavior:'smooth'})">About Us</a></li>
       <li><a onclick="document.getElementById('features-section').scrollIntoView({behavior:'smooth'})">Features</a></li>
       <li><a onclick="showPage('documents')" id="nav-documents">Documents</a></li>
       <li><a onclick="showPage('advocates')" id="nav-advocates">Find Advocate</a></li>
-      <li><a onclick="openModal('settings')">Settings</a></li>
-      <li><a onclick="logout()">Logout (${username})</a></li>
     `;
 
     // Also update mobile menu
     const mobileMenu = document.getElementById('mobileMenu');
     mobileMenu.innerHTML = `
+      <div style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 10px; display:flex; align-items:center; gap:12px; text-align:left;">
+        <div class="profile-avatar" style="width:32px; height:32px; font-size:14px;">${firstLetter}</div>
+        <span style="font-weight:600; font-size:14px;">${username}</span>
+      </div>
       <a onclick="showPage('home');toggleMenu()">🏠 Home</a>
       <a onclick="showPage('about');toggleMenu()">ℹ️ About Us</a>
       <a onclick="showPage('features');toggleMenu()">⭐ Features</a>
       <a onclick="showPage('documents');toggleMenu()">📄 Documents</a>
       <a onclick="showPage('advocates');toggleMenu()">⚖️ Find Advocate</a>
-      <a onclick="openModal('settings');toggleMenu()">⚙️ Settings</a>
-      <a onclick="logout()">🚪 Logout (${username})</a>
+      <a onclick="openModal('settings');toggleMenu()">⚙️ Customize Username</a>
+      <a onclick="logout()">🚪 Logout</a>
     `;
   }
+
+  function toggleProfileDropdown() {
+    const d = document.getElementById('profileDropdown');
+    if (d) d.classList.toggle('show');
+  }
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    const d = document.getElementById('profileDropdown');
+    const avatar = document.querySelector('.profile-avatar');
+    if (d && d.classList.contains('show') && !d.contains(e.target) && e.target !== avatar) {
+      d.classList.remove('show');
+    }
+  });
 
   function logout() {
     localStorage.removeItem('user');
@@ -2053,6 +2144,11 @@
     const user = localStorage.getItem('user');
     if (isLoggedIn && user) {
       updateNavbarForLoggedInUser(user);
+    } else {
+      // Show login popup automatically if not logged in
+      setTimeout(() => {
+        openModal('login');
+      }, 1000);
     }
   });
 </script>
