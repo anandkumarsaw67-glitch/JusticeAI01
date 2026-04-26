@@ -445,4 +445,3 @@ ${text}`;
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => console.log(`✅ Justice AI server running on http://localhost:${PORT}`));
-
