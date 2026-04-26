@@ -1,2060 +1,448 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Justice AI Agent — Your Personal Legal Assistant</title>
-  <meta name="description" content="Justice AI — AI-powered legal assistant providing instant legal insights, case analysis, and document management." />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
-
-  <style>
-    /* ─── RESET & BASE ─────────────────────────────── */
-    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
-    body {
-      font-family: 'Inter', sans-serif;
-      background: #050510;
-      color: #fff;
-      overflow-x: hidden;
-      -webkit-font-smoothing: antialiased;
-    }
-    h1,h2,h3,h4 { font-family: 'Outfit', sans-serif; }
-
-    /* ─── SCROLL PROGRESS BAR ───────────────────────── */
-    #progressBar {
-      position: fixed; top: 0; left: 0; height: 3px; width: 0%;
-      background: linear-gradient(to right, #3b82f6, #8b5cf6);
-      z-index: 9999; transition: width 0.1s linear;
-    }
-
-    /* ─── SCROLLBAR ─────────────────────────────────── */
-    ::-webkit-scrollbar { width: 5px; }
-    ::-webkit-scrollbar-track { background: #050510; }
-    ::-webkit-scrollbar-thumb { background: linear-gradient(#3b82f6,#8b5cf6); border-radius: 99px; }
-
-    /* ─── GLASSMORPHISM ─────────────────────────────── */
-    .glass {
-      background: rgba(255,255,255,0.04);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255,255,255,0.09);
-      border-radius: 1.25rem;
-    }
-    .glass-nav {
-      background: rgba(5,5,16,0.8);
-      backdrop-filter: blur(20px);
-      border-bottom: 1px solid rgba(255,255,255,0.07);
-    }
-
-    /* ─── ANIMATED GRADIENT BG ──────────────────────── */
-    .grad-bg {
-      background: linear-gradient(125deg,#050510,#0d0d2b,#1a043a,#0b0b24,#050510);
-      background-size: 400% 400%;
-      animation: gradAnim 18s ease infinite;
-    }
-    @keyframes gradAnim {
-      0%,100% { background-position: 0% 50%; }
-      50%      { background-position: 100% 50%; }
-    }
-
-    /* ─── ORB ───────────────────────────────────────── */
-    .orb {
-      border-radius: 50%; filter: blur(80px);
-      position: absolute; pointer-events: none;
-      animation: orbPulse 6s ease-in-out infinite;
-    }
-    @keyframes orbPulse {
-      0%,100%{opacity:.4;transform:scale(1);}
-      50%{opacity:.7;transform:scale(1.1);}
-    }
-
-    /* ─── FADE-IN ANIMATION ─────────────────────────── */
-    .fade-up { opacity: 0; transform: translateY(30px); transition: opacity .7s ease, transform .7s ease; }
-    .fade-up.visible { opacity: 1; transform: translateY(0); }
-
-    /* ─── PAGE VIEWS (SPA) ──────────────────────────── */
-    .page { display: none; }
-    .page.active { display: block; }
-
-    /* ─── MODAL OVERLAY ─────────────────────────────── */
-    .modal-overlay {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.6); backdrop-filter: blur(5px);
-      z-index: 2000; display: none; align-items: center; justify-content: center;
-      padding: 16px; box-sizing: border-box;
-    }
-    .modal-overlay.active { display: flex; }
-    .modal-close {
-      position: absolute; top: 12px; right: 16px;
-      background: none; border: none; color: #fff; font-size: 28px; cursor: pointer; transition: color 0.2s;
-      z-index: 20;
-    }
-    .modal-close:hover { color: #f87171; }
-
-    /* ══════════════════════════════════════════════════
-       NAVBAR
-    ══════════════════════════════════════════════════ */
-    #navbar {
-      position: fixed; top: 0; left: 0; width: 100%;
-      z-index: 1000; transition: all .3s ease; padding: 20px 0;
-    }
-    #navbar.scrolled { padding: 12px 0; }
-    .nav-inner {
-      max-width: 1200px; margin: 0 auto;
-      padding: 0 24px;
-      display: flex; justify-content: space-between; align-items: center;
-    }
-    .nav-logo {
-      display: flex; align-items: center; gap: 10px;
-      cursor: pointer; text-decoration: none;
-    }
-    .nav-logo-icon {
-      width: 38px; height: 38px; border-radius: 10px;
-      background: linear-gradient(135deg,#3b82f6,#8b5cf6);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 18px; box-shadow: 0 0 20px rgba(139,92,246,.4);
-    }
-    .nav-logo span {
-      font-family:'Outfit',sans-serif; font-weight: 700; font-size: 18px;
-      background: linear-gradient(to right,#60a5fa,#a78bfa);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    }
-    .nav-links { display: flex; align-items: center; gap: 32px; list-style: none; }
-    .nav-links a {
-      color: #9ca3af; font-size: 14px; font-weight: 500;
-      text-decoration: none; transition: color .2s;
-      cursor: pointer;
-    }
-    .nav-links a:hover, .nav-links a.active { color: #fff; }
-    .nav-links a.active { color: #a78bfa; text-shadow: 0 0 20px rgba(167,139,250,.5); }
-    .nav-cta {
-      padding: 10px 20px; border-radius: 12px; border: none; cursor: pointer;
-      background: linear-gradient(to right,#2563eb,#7c3aed);
-      color: #fff; font-weight: 600; font-size: 14px;
-      box-shadow: 0 0 20px rgba(139,92,246,.3); transition: all .3s;
-    }
-    .nav-cta:hover { filter: brightness(1.15); transform: scale(1.04); }
-
-    /* mobile menu */
-    .hamburger { display: none; background: none; border: none; cursor: pointer; color: #9ca3af; font-size: 22px; }
-    .mobile-menu { display: none; padding: 16px 24px; }
-    .mobile-menu.open { display: block; }
-    .mobile-menu a {
-      display: block; padding: 10px 0; color: #9ca3af;
-      font-size: 15px; text-decoration: none; cursor: pointer;
-      border-bottom: 1px solid rgba(255,255,255,.05);
-    }
-    .mobile-menu a:hover { color: #fff; }
-
-    @media(max-width:768px){
-      .nav-links,.nav-cta{ display: none; }
-      .hamburger { display: block; }
-    }
-
-    /* ══════════════════════════════════════════════════
-       HOME PAGE
-    ══════════════════════════════════════════════════ */
-    #page-home { min-height: 100vh; }
-
-    /* Hero */
-    .hero {
-      min-height: 100vh; display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      padding: 120px 20px 60px; position: relative; overflow: hidden;
-    }
-    .hero-badge {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 6px 16px; border-radius: 99px;
-      border: 1px solid rgba(139,92,246,.3);
-      background: rgba(139,92,246,.1); color: #c4b5fd;
-      font-size: 13px; font-weight: 500; margin-bottom: 24px;
-    }
-    .hero-badge span { width:8px; height:8px; border-radius:50%; background:#a78bfa; animation: ping 1.5s infinite; }
-    @keyframes ping { 0%,100%{opacity:1;} 50%{opacity:.4;} }
-    .hero h1 {
-      font-size: clamp(2.5rem, 6vw, 5rem); font-weight: 900;
-      text-align: center; line-height: 1.15; max-width: 900px;
-      margin-bottom: 20px;
-    }
-    .hero h1 .grad-text {
-      background: linear-gradient(to right,#fde68a,#c4b5fd,#93c5fd);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    }
-    .hero-sub {
-      color: #9ca3af; font-size: clamp(15px,2vw,18px);
-      text-align: center; max-width: 560px; line-height: 1.7; margin-bottom: 32px;
-    }
-    .hero-btns { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-bottom: 56px; }
-    .btn-primary {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 14px 28px; border-radius: 14px;
-      background: linear-gradient(to right,#2563eb,#7c3aed);
-      color: #fff; font-weight: 600; font-size: 15px; border: none;
-      cursor: pointer; box-shadow: 0 0 30px rgba(124,58,237,.4);
-      transition: all .3s;
-    }
-    .btn-primary:hover { filter: brightness(1.1); transform: scale(1.04); }
-    .btn-secondary {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 14px 28px; border-radius: 14px;
-      background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
-      color: #fff; font-weight: 600; font-size: 15px;
-      cursor: pointer; transition: all .3s;
-    }
-    .btn-secondary:hover { background: rgba(255,255,255,.1); transform: scale(1.04); }
-    .hero-stats { display: flex; gap: 48px; flex-wrap: wrap; justify-content: center; }
-    .stat-val {
-      font-family:'Outfit',sans-serif; font-size: 2rem; font-weight: 800;
-      background: linear-gradient(to right,#60a5fa,#a78bfa);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    }
-    .stat-label { font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: .1em; margin-top: 2px; }
-    .scroll-indicator { margin-top: 40px; color: #374151; animation: bounce 2s infinite; }
-    @keyframes bounce { 0%,100%{transform:translateY(0);}50%{transform:translateY(8px);} }
-
-    /* AI Chat Box */
-    .chat-section { max-width: 760px; margin: 0 auto; padding: 0 20px 80px; }
-    .chat-card { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1); border-radius: 20px; overflow: hidden; }
-    .chat-header {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,.07);
-      background: rgba(255,255,255,.02);
-    }
-    .chat-header-left { display: flex; align-items: center; gap: 12px; }
-    .chat-bot-icon {
-      width: 38px; height: 38px; border-radius: 10px;
-      background: linear-gradient(135deg,#f59e0b,#ef4444);
-      display: flex; align-items: center; justify-content: center; font-size: 18px;
-    }
-    .chat-bot-name { font-weight: 700; font-size: 14px; }
-    .chat-status { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #34d399; }
-    .chat-status-dot { width: 6px; height: 6px; border-radius: 50%; background: #34d399; animation: ping 1.5s infinite; }
-    #clearBtn {
-      background: none; border: none; cursor: pointer; color: #6b7280;
-      font-size: 18px; padding: 4px 8px; border-radius: 8px; transition: all .2s; display: none;
-    }
-    #clearBtn:hover { color: #f87171; background: rgba(248,113,113,.1); }
-
-    /* History area */
-    #historyBox {
-      min-height: 140px; max-height: 380px; overflow-y: auto;
-      padding: 16px 20px; display: flex; flex-direction: column; gap: 14px;
-    }
-    .history-empty {
-      display: flex; flex-direction: column; align-items: center;
-      justify-content: center; text-align: center; padding: 40px 0; color: #4b5563;
-      gap: 12px;
-    }
-    .history-empty-icon { font-size: 40px; }
-    .bubble-row { display: flex; gap: 10px; align-items: flex-start; }
-    .bubble-row.user { flex-direction: row-reverse; }
-    .avatar {
-      width: 32px; height: 32px; border-radius: 50%;
-      flex-shrink: 0; display: flex; align-items: center; justify-content: center;
-      font-size: 14px;
-    }
-    .avatar.user { background: linear-gradient(135deg,#2563eb,#1d4ed8); }
-    .avatar.ai   { background: linear-gradient(135deg,#7c3aed,#4f46e5); }
-    .bubble {
-      max-width: 78%; padding: 12px 16px; border-radius: 16px;
-      font-size: 14px; line-height: 1.65; white-space: pre-wrap;
-    }
-    .bubble.user {
-      background: rgba(37,99,235,.25); border: 1px solid rgba(37,99,235,.2);
-      border-top-right-radius: 4px; color: #dbeafe;
-    }
-    .bubble.ai {
-      background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08);
-      border-top-left-radius: 4px; color: #e2e8f0;
-    }
-    .bubble-image {
-      max-width: 250px; border-radius: 12px; border: 1px solid rgba(255,255,255,.1);
-      cursor: pointer; transition: transform .2s;
-    }
-    .bubble-image:hover { transform: scale(1.02); }
-    .typing-bubble { display: flex; align-items: center; gap: 5px; padding: 14px; }
-    .dot { width: 7px; height: 7px; border-radius: 50%; background: #8b5cf6; animation: typingDot 1.2s infinite; }
-    .dot:nth-child(2){animation-delay:.2s;} .dot:nth-child(3){animation-delay:.4s;}
-    @keyframes typingDot { 0%,80%,100%{opacity:.2;transform:scale(.8);} 40%{opacity:1;transform:scale(1);} }
-
-    /* Error */
-    .error-bar {
-      margin: 0 20px 12px; padding: 10px 16px; border-radius: 12px;
-      background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.2);
-      color: #fca5a5; font-size: 13px; display: none;
-    }
-
-    /* Textarea & buttons */
-    .chat-input-area { padding: 14px 20px 20px; border-top: 1px solid rgba(255,255,255,.07); background: rgba(255,255,255,.01); }
-    #messageInput {
-      width: 100%; background: rgba(255,255,255,.06); border: 1px solid #374151;
-      border-radius: 14px; padding: 14px 16px; color: #fff;
-      font-family: inherit; font-size: 14px; resize: none;
-      min-height: 108px; outline: none; line-height: 1.6;
-      transition: border-color .2s, box-shadow .2s;
-      placeholder-color: #4b5563;
-    }
-    #messageInput::placeholder { color: #4b5563; }
-    #messageInput:focus { border-color: rgba(139,92,246,.5); box-shadow: 0 0 0 3px rgba(139,92,246,.12); }
-    .chat-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; flex-wrap: wrap; gap: 10px; }
-    .action-btns { display: flex; gap: 10px; flex-wrap: wrap; }
-    .btn-send {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 10px 20px; border-radius: 12px; border: none; cursor: pointer;
-      background: linear-gradient(to right,#2563eb,#7c3aed); color: #fff;
-      font-weight: 600; font-size: 13px; transition: all .3s;
-    }
-    .btn-send:disabled { opacity: .45; cursor: not-allowed; }
-    .btn-send:not(:disabled):hover { filter: brightness(1.1); transform: scale(1.03); }
-    .btn-voice {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 10px 20px; border-radius: 12px; border: none; cursor: pointer;
-      background: #059669; color: #fff; font-weight: 600; font-size: 13px;
-      transition: all .3s;
-    }
-    .btn-voice.listening { background: #dc2626; animation: vPulse .8s infinite; }
-    @keyframes vPulse { 0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.4);} 70%{box-shadow:0 0 0 10px rgba(220,38,38,0);} }
-    .btn-voice:hover { filter: brightness(1.1); }
-    .btn-media {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 10px 20px; border-radius: 12px; border: none; cursor: pointer;
-      background: #7c3aed; color: #fff; font-weight: 600; font-size: 13px;
-      transition: all .3s;
-    }
-    .btn-media:hover { filter: brightness(1.1); transform: scale(1.03); }
-    .btn-gallery {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 10px 20px; border-radius: 12px; border: none; cursor: pointer;
-      background: #0891b2; color: #fff; font-weight: 600; font-size: 13px;
-      transition: all .3s;
-    }
-    .btn-gallery:hover { filter: brightness(1.1); transform: scale(1.03); }
-    .hint-text { font-size: 11px; color: #4b5563; }
-
-    /* Media URL Modal */
-    .media-modal {
-      background: rgba(15,15,25,.95); border: 1px solid rgba(139,92,246,.3);
-      border-radius: 20px; padding: 28px; max-width: 500px; width: 100%;
-      position: relative;
-    }
-    .media-modal h3 {
-      font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 700;
-      margin-bottom: 8px; color: #fff;
-    }
-    .media-modal p {
-      font-size: 14px; color: #9ca3af; margin-bottom: 20px;
-    }
-    .media-modal input {
-      width: 100%; background: rgba(255,255,255,.06); border: 1px solid #374151;
-      border-radius: 12px; padding: 14px 16px; color: #fff;
-      font-family: inherit; font-size: 14px; outline: none; margin-bottom: 16px;
-    }
-    .media-modal input:focus { border-color: rgba(139,92,246,.5); box-shadow: 0 0 0 3px rgba(139,92,246,.12); }
-    .media-modal input::placeholder { color: #4b5563; }
-    .media-modal-btns { display: flex; gap: 12px; justify-content: flex-end; }
-    .media-modal .btn-cancel {
-      padding: 10px 20px; border-radius: 12px; border: 1px solid #374151;
-      background: transparent; color: #9ca3af; font-weight: 600; font-size: 13px;
-      cursor: pointer; transition: all .2s;
-    }
-    .media-modal .btn-cancel:hover { color: #fff; border-color: #6b7280; }
-    .media-modal .btn-analyze {
-      padding: 10px 20px; border-radius: 12px; border: none; cursor: pointer;
-      background: linear-gradient(to right,#2563eb,#7c3aed); color: #fff;
-      font-weight: 600; font-size: 13px; transition: all .3s;
-    }
-    .media-modal .btn-analyze:hover { filter: brightness(1.1); }
-    .media-modal .btn-analyze:disabled { opacity: .45; cursor: not-allowed; }
-    .media-result {
-      margin-top: 16px; padding: 16px; border-radius: 12px;
-      background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
-      max-height: 200px; overflow-y: auto; display: none;
-    }
-    .media-result.show { display: block; }
-    .media-result h4 { font-size: 14px; font-weight: 600; color: #a78bfa; margin-bottom: 8px; }
-    .media-result p { font-size: 13px; color: #e2e8f0; line-height: 1.6; margin: 0; }
-
-    /* ══════════════════════════════════════════════════
-       ABOUT PAGE
-    ══════════════════════════════════════════════════ */
-    #page-about { padding: 120px 20px 80px; max-width: 1200px; margin: 0 auto; }
-    .section-badge {
-      display: inline-flex; align-items: center; gap: 8px; padding: 6px 16px;
-      border-radius: 99px; font-size: 13px; font-weight: 500; margin-bottom: 20px;
-    }
-    .badge-blue { border: 1px solid rgba(59,130,246,.3); background: rgba(59,130,246,.1); color: #93c5fd; }
-    .badge-purple { border: 1px solid rgba(139,92,246,.3); background: rgba(139,92,246,.1); color: #c4b5fd; }
-    .section-title {
-      font-size: clamp(2rem,4vw,3rem); font-weight: 800; margin-bottom: 16px;
-      background: linear-gradient(to right,#60a5fa,#a78bfa);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    }
-    .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: start; margin-bottom: 60px; }
-    @media(max-width:768px){ .about-grid { grid-template-columns:1fr; gap:40px; } }
-    .about-block h3 { font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 10px; }
-    .about-block p { color: #9ca3af; line-height: 1.8; font-size: 15px; margin-bottom: 28px; }
-    .values-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    @media(max-width:480px){ .values-grid { grid-template-columns:1fr; } }
-    .value-card {
-      padding: 22px; border-radius: 16px; cursor: default;
-      transition: transform .3s, box-shadow .3s;
-    }
-    .value-card:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 20px 40px rgba(0,0,0,.3); }
-    .value-icon { font-size: 24px; margin-bottom: 10px; }
-    .value-title { font-weight: 700; font-size: 15px; color: #fff; margin-bottom: 6px; }
-    .value-desc { font-size: 13px; color: #6b7280; line-height: 1.6; }
-    .stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-top: 20px; }
-    @media(max-width:640px){ .stats-row { grid-template-columns: 1fr 1fr; } }
-    .stat-card { text-align: center; padding: 24px 16px; }
-
-    /* ══════════════════════════════════════════════════
-       FEATURES PAGE
-    ══════════════════════════════════════════════════ */
-    #page-features { padding: 120px 20px 80px; max-width: 1200px; margin: 0 auto; }
-    .features-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 48px; }
-    @media(max-width:640px){ .features-grid { grid-template-columns:1fr; } }
-    .feature-card {
-      padding: 32px; border-radius: 20px; cursor: default;
-      transition: transform .3s, box-shadow .3s;
-      position: relative; overflow: hidden;
-    }
-    .feature-card:hover { transform: translateY(-6px) scale(1.02); box-shadow: 0 30px 60px rgba(0,0,0,.4); }
-    .feature-tag {
-      display: inline-block; padding: 4px 12px; border-radius: 99px;
-      font-size: 11px; font-weight: 600; margin-bottom: 20px;
-    }
-    .feature-icon-wrap {
-      width: 60px; height: 60px; border-radius: 16px;
-      background: rgba(255,255,255,.08); display: flex;
-      align-items: center; justify-content: center; font-size: 28px;
-      margin-bottom: 16px; float: right; margin-left: 16px;
-    }
-    .feature-title { font-size: 19px; font-weight: 700; color: #fff; margin-bottom: 10px; }
-    .feature-desc { font-size: 14px; color: #9ca3af; line-height: 1.7; }
-    .feature-more { margin-top: 16px; font-size: 13px; font-weight: 600; opacity: 0; transition: opacity .3s; }
-    .feature-card:hover .feature-more { opacity: 1; }
-
-    /* ══════════════════════════════════════════════════
-       DOCUMENTS PAGE
-    ══════════════════════════════════════════════════ */
-    #page-documents { padding: 120px 20px 80px; max-width: 1200px; margin: 0 auto; }
-    .docs-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-top: 48px; }
-    .doc-card {
-      padding: 32px; border-radius: 20px; 
-      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      display: flex; flex-direction: column; justify-content: space-between;
-    }
-    .doc-card:hover { 
-      transform: translateY(-8px) scale(1.02); 
-      background: rgba(255,255,255,0.05);
-      border-color: rgba(139,92,246,0.3);
-      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-    }
-    .doc-icon { font-size: 40px; margin-bottom: 20px; }
-    .doc-title { font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 12px; }
-    .doc-desc { font-size: 14px; color: #9ca3af; line-height: 1.6; margin-bottom: 24px; }
-    .btn-view-doc {
-      width: 100%; padding: 12px; border-radius: 12px; border: 1px solid rgba(139,92,246,0.3);
-      background: rgba(139,92,246,0.1); color: #c4b5fd; font-weight: 600; font-size: 14px;
-      cursor: pointer; transition: all 0.3s; text-align: center; text-decoration: none;
-    }
-    .btn-view-doc:hover { background: #7c3aed; color: #fff; transform: translateY(-2px); }
-
-    /* ══════════════════════════════════════════════════
-       ADVOCATES PAGE
-    ══════════════════════════════════════════════════ */
-    #page-advocates { padding: 120px 20px 80px; max-width: 1200px; margin: 0 auto; }
-    .search-container {
-      max-width: 800px; margin: 40px auto; padding: 32px;
-      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-    }
-    .search-row { display: flex; gap: 12px; flex-wrap: wrap; }
-    .search-input-wrap { flex: 1; position: relative; min-width: 200px; }
-    .search-input-wrap i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #6b7280; }
-    .search-input {
-      width: 100%; padding: 14px 16px 14px 44px; border-radius: 14px;
-      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-      color: #fff; font-size: 15px; outline: none; transition: all 0.3s;
-    }
-    .search-input:focus { border-color: #8b5cf6; background: rgba(255,255,255,0.08); box-shadow: 0 0 0 4px rgba(139,92,246,0.1); }
-    .search-btn {
-      padding: 14px 28px; border-radius: 14px; border: none;
-      background: linear-gradient(to right, #3b82f6, #8b5cf6);
-      color: #fff; font-weight: 700; cursor: pointer; transition: all 0.3s;
-    }
-    .search-btn:hover { transform: translateY(-2px); filter: brightness(1.1); box-shadow: 0 10px 20px rgba(59,130,246,0.3); }
-    
-    .filter-chips { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; justify-content: center; }
-    .chip {
-      padding: 8px 16px; border-radius: 99px; background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1); color: #9ca3af; font-size: 13px;
-      cursor: pointer; transition: all 0.2s;
-    }
-    .chip.active { background: rgba(139,92,246,0.15); border-color: #8b5cf6; color: #c4b5fd; }
-    .chip:hover:not(.active) { background: rgba(255,255,255,0.1); color: #fff; }
-
-    .advocates-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; margin-top: 40px; }
-    .adv-card {
-      padding: 24px; border-radius: 20px; background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.08); transition: all 0.3s;
-    }
-    .adv-card:hover { transform: translateY(-6px); background: rgba(255,255,255,0.05); border-color: rgba(139,92,246,0.3); }
-    .adv-header { display: flex; gap: 16px; align-items: center; margin-bottom: 16px; }
-    .adv-img { width: 64px; height: 64px; border-radius: 16px; object-fit: cover; background: #1e293b; }
-    .adv-info h4 { font-size: 18px; margin-bottom: 4px; color: #fff; }
-    .adv-spec { font-size: 12px; color: #a78bfa; font-weight: 600; text-transform: uppercase; }
-    .adv-stats { display: flex; gap: 16px; margin-bottom: 16px; padding: 12px; background: rgba(255,255,255,0.02); border-radius: 12px; }
-    .stat-item { flex: 1; text-align: center; }
-    .stat-val-sm { display: block; font-weight: 700; color: #fff; font-size: 14px; }
-    .stat-label-sm { display: block; font-size: 10px; color: #6b7280; text-transform: uppercase; }
-    .adv-footer { display: flex; gap: 10px; }
-    .btn-contact {
-      flex: 1; padding: 10px; border-radius: 10px; border: none;
-      background: rgba(139,92,246,0.1); color: #c4b5fd; font-weight: 600; font-size: 13px;
-      cursor: pointer; transition: 0.3s; text-align: center;
-    }
-    .btn-contact:hover { background: #7c3aed; color: #fff; }
-    .no-results { text-align: center; padding: 60px; color: #4b5563; }
-
-    .auth-page {
-      min-height: 100vh; display: flex; align-items: center;
-      justify-content: center; padding: 100px 20px 60px;
-      position: relative; overflow: hidden;
-    }
-    .auth-card { 
-      width: 100%; max-width: 440px; position: relative; z-index: 10;
-      max-height: 90vh; overflow-y: auto; overflow-x: hidden;
-    }
-    .auth-inner { padding: 40px 36px; }
-    @media(max-width:480px){ 
-      .auth-inner { padding: 24px 20px; } 
-    }
-    .auth-logo {
-      width: 56px; height: 56px; border-radius: 16px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 26px; margin: 0 auto 18px; box-shadow: 0 0 30px rgba(139,92,246,.4);
-    }
-    .auth-title { font-size: 26px; font-weight: 800; color: #fff; text-align: center; margin-bottom: 6px; }
-    .auth-sub { font-size: 13px; color: #6b7280; text-align: center; margin-bottom: 28px; }
-    .form-group { margin-bottom: 18px; }
-    .form-label { display: block; font-size: 13px; font-weight: 500; color: #9ca3af; margin-bottom: 8px; }
-    .form-input {
-      width: 100%; background: rgba(255,255,255,.05); border: 1px solid #374151;
-      border-radius: 12px; padding: 12px 16px; color: #fff; font-family: inherit;
-      font-size: 14px; outline: none; transition: all .2s;
-    }
-    .form-input:focus { border-color: rgba(139,92,246,.5); box-shadow: 0 0 0 3px rgba(139,92,246,.12); }
-    .form-input-wrap { position: relative; }
-    .toggle-pass {
-      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
-      background: none; border: none; cursor: pointer; color: #6b7280;
-      font-size: 16px; transition: color .2s;
-    }
-    .toggle-pass:hover { color: #9ca3af; }
-    .form-input:focus ~ .form-label, .form-input:not(:placeholder-shown) ~ .form-label {
-      color: #a78bfa;
-    }
-    .form-row { display: flex; justify-content: flex-end; margin-top: 6px; }
-    .form-group { position: relative; margin-bottom: 24px; }
-    .form-input {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.1);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .form-input:focus {
-      background: rgba(255,255,255,0.07);
-      border-color: #8b5cf6;
-      box-shadow: 0 0 20px rgba(139,92,246,0.15);
-      transform: translateY(-1px);
-    }
-    .btn-auth {
-      position: relative;
-      overflow: hidden;
-    }
-    .btn-auth::after {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
-      opacity: 0;
-      transition: opacity 0.3s;
-      pointer-events: none;
-    }
-    .btn-auth:hover::after {
-      opacity: 1;
-    }
-    .form-link { font-size: 12px; color: #a78bfa; text-decoration: none; cursor: pointer; }
-    .form-link:hover { color: #c4b5fd; }
-    .btn-auth {
-      width: 100%; padding: 14px; border-radius: 12px; border: none;
-      color: #fff; font-weight: 700; font-size: 15px; cursor: pointer;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      margin-top: 6px; transition: all .3s;
-    }
-    .btn-auth:hover { filter: brightness(1.1); transform: scale(1.02); }
-    .auth-divider {
-      display: flex; align-items: center; text-align: center; margin: 20px 0; color: #6b7280; font-size: 13px;
-    }
-    .auth-divider::before, .auth-divider::after {
-      content: ''; flex: 1; border-bottom: 1px solid rgba(255,255,255,0.1);
-    }
-    .auth-divider span { padding: 0 10px; }
-    .btn-google {
-      width: 100%; padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,.1);
-      background: rgba(255,255,255,.05); color: #fff; font-weight: 600; font-size: 14px; cursor: pointer;
-      display: flex; align-items: center; justify-content: center; gap: 10px; transition: all .3s;
-    }
-    .btn-google:hover { background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.2); transform: scale(1.02); }
-    .auth-footer { text-align: center; font-size: 13px; color: #6b7280; margin-top: 22px; }
-    .auth-footer a { color: #a78bfa; cursor: pointer; font-weight: 600; }
-    .auth-footer a:hover { color: #c4b5fd; }
-    .perks { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; margin-bottom: 24px; }
-    .perk { display: flex; align-items: center; gap: 5px; font-size: 12px; color: #6b7280; }
-    .perk-dot { color: #34d399; }
-
-    /* ─── Back to top ──────────────────────────────── */
-    #backToTop {
-      position: fixed; bottom: 28px; right: 28px; z-index: 999;
-      width: 44px; height: 44px; border-radius: 14px; border: none; cursor: pointer;
-      background: linear-gradient(135deg,#2563eb,#7c3aed);
-      color: #fff; font-size: 18px; display: none;
-      box-shadow: 0 0 20px rgba(124,58,237,.4);
-      transition: all .3s; align-items: center; justify-content: center;
-    }
-    #backToTop.show { display: flex; }
-    #backToTop:hover { transform: scale(1.1); }
-
-    /* ─── Divider ──────────────────────────────────── */
-    .divider { height: 1px; background: linear-gradient(to right,transparent,rgba(255,255,255,.1),transparent); margin: 0; }
-
-    /* ─── Footer ─────────────────────────────────── */
-    footer {
-      padding: 40px 24px; border-top: 1px solid rgba(255,255,255,.05);
-      display: flex; justify-content: space-between; align-items: center;
-      flex-wrap: wrap; gap: 16px; max-width: 1200px; margin: 0 auto;
-    }
-    footer .footer-logo { display: flex; align-items: center; gap: 8px; }
-    footer p { font-size: 13px; color: #4b5563; }
-    footer .footer-links { display: flex; gap: 20px; }
-    footer .footer-links a { font-size: 13px; color: #4b5563; text-decoration: none; transition: color .2s; }
-    footer .footer-links a:hover { color: #9ca3af; }
-  </style>
-</head>
-<body>
-
-<!-- Scroll progress bar -->
-<div id="progressBar"></div>
-
-<!-- ════════════════════════════════════════════
-     NAVBAR
-════════════════════════════════════════════ -->
-<nav id="navbar">
-  <div class="nav-inner">
-    <a class="nav-logo" onclick="showPage('home')">
-      <div class="nav-logo-icon">⚖️</div>
-      <span>Justice AI</span>
-    </a>
-
-    <ul class="nav-links">
-      <li><a onclick="showPage('home')" id="nav-home" class="active">Home</a></li>
-      <li><a onclick="document.getElementById('about-section').scrollIntoView({behavior:'smooth'})">About Us</a></li>
-      <li><a onclick="document.getElementById('features-section').scrollIntoView({behavior:'smooth'})">Features</a></li>
-      <li><a onclick="showPage('documents')" id="nav-documents">Documents</a></li>
-      <li><a onclick="showPage('advocates')" id="nav-advocates">Find Advocate</a></li>
-      <li><a onclick="openModal('login')" id="nav-login">Login</a></li>
-      <li><a onclick="openModal('signup')" id="nav-signup">New Account</a></li>
-    </ul>
-
-    <button class="nav-cta" onclick="openModal('login')">Get Started</button>
-    <button class="hamburger" onclick="toggleMenu()" id="hamburgerBtn">☰</button>
-  </div>
-
-  <div class="mobile-menu glass-nav" id="mobileMenu">
-    <a onclick="showPage('home');toggleMenu()">🏠 Home</a>
-    <a onclick="showPage('about');toggleMenu()">ℹ️ About Us</a>
-    <a onclick="showPage('features');toggleMenu()">⭐ Features</a>
-    <a onclick="showPage('documents');toggleMenu()">📄 Documents</a>
-    <a onclick="showPage('advocates');toggleMenu()">⚖️ Find Advocate</a>
-    <a onclick="openModal('login');toggleMenu()">🔐 Login</a>
-    <a onclick="openModal('signup');toggleMenu()">🆕 New Account</a>
-  </div>
-</nav>
-
-<!-- ════════════════════════════════════════════
-     PAGE: HOME
-════════════════════════════════════════════ -->
-<div id="page-home" class="page active">
-  <div class="hero grad-bg">
-    <!-- Orbs -->
-    <div class="orb" style="width:500px;height:500px;background:rgba(29,78,216,.25);top:-100px;left:-150px;"></div>
-    <div class="orb" style="width:400px;height:400px;background:rgba(109,40,217,.3);bottom:50px;right:-100px;"></div>
-
-    <!-- Badge -->
-    <div class="hero-badge fade-up"><span></span> AI-Powered Legal Intelligence</div>
-
-    <!-- Heading -->
-    <h1 class="fade-up">
-      ⚖️ <span class="grad-text">Justice AI Agent</span>
-    </h1>
-    <p class="hero-sub fade-up">Your Personal Legal Assistant — describe your problem and get instant AI-powered legal guidance, 24/7.</p>
-
-    <!-- Buttons -->
-    <div class="hero-btns fade-up">
-      <button class="btn-primary" onclick="document.getElementById('chatSection').scrollIntoView({behavior:'smooth'})">
-        ⚖️ Get Legal Advice →
-      </button>
-      <button class="btn-secondary" onclick="showPage('about')">Learn More</button>
-    </div>
-
-    <!-- Stats -->
-    <div class="hero-stats fade-up">
-      <div><div class="stat-val">10K+</div><div class="stat-label">Cases Analyzed</div></div>
-      <div><div class="stat-val">98%</div><div class="stat-label">Accuracy Rate</div></div>
-      <div><div class="stat-val">24/7</div><div class="stat-label">AI Availability</div></div>
-    </div>
-
-    <div class="scroll-indicator">↓</div>
-  </div>
-
-  <div class="divider"></div>
-
-  <!-- ── AI CHAT ── -->
-  <div id="chatSection" class="chat-section" style="padding-top:60px;">
-    <div class="chat-card">
-      <!-- Card header -->
-      <div class="chat-header">
-        <div class="chat-header-left">
-          <div class="chat-bot-icon">⚖️</div>
-          <div>
-            <div class="chat-bot-name">Justice AI Agent</div>
-            <div class="chat-status"><div class="chat-status-dot"></div> Online & Ready</div>
-          </div>
-        </div>
-        <button id="clearBtn" onclick="clearHistory()" title="Clear conversation">🗑</button>
-      </div>
-
-      <!-- Conversation history -->
-      <div id="historyBox">
-        <div class="history-empty" id="emptyState">
-          <div class="history-empty-icon">⚖️</div>
-          <p style="font-size:14px;">Describe your legal problem below — I'll provide instant AI-powered guidance.</p>
-        </div>
-      </div>
-
-      <!-- Error bar -->
-      <div class="error-bar" id="errorBar"></div>
-
-      <!-- Input area -->
-      <div class="chat-input-area">
-        <textarea
-          id="messageInput"
-          placeholder="Describe your legal problem in detail..."
-          onkeydown="handleKey(event)"
-        ></textarea>
-        <div class="chat-actions">
-          <div class="action-btns">
-            <button class="btn-send" id="sendBtn" onclick="sendMessage()">
-              ⚖️ Get Legal Advice
-            </button>
-            <button class="btn-voice" id="voiceBtn" onclick="toggleVoice()">
-              🎤 Speak Your Problem
-            </button>
-            <button class="btn-media" id="mediaBtn" onclick="openMediaModal()">
-              🔗 Analyze URL
-            </button>
-            <button class="btn-gallery" id="galleryBtn" onclick="document.getElementById('imageInput').click()">
-              🖼️ Send Image
-            </button>
-          </div>
-          <input type="file" id="imageInput" accept="image/*" style="display:none;" onchange="handleImageUpload(event)">
-          <span class="hint-text">Enter to send · Shift+Enter = new line</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- History label -->
-    <div id="historyLabel" style="display:none; margin-top:20px; text-align:center; font-size:12px; color:#374151;">
-      ── Conversation History ──
-    </div>
-  </div>
-
-  <div class="divider"></div>
-
-  <!-- ── ABOUT US ── -->
-  <div id="about-section" style="position:relative;overflow:hidden;padding:80px 24px 60px;max-width:1200px;margin:0 auto;">
-    <div class="orb" style="width:350px;height:350px;background:rgba(29,78,216,.15);top:10%;right:-80px;"></div>
-    <div class="orb" style="width:250px;height:250px;background:rgba(109,40,217,.15);bottom:10%;left:-60px;"></div>
-
-    <div style="text-align:center;margin-bottom:60px;">
-      <div class="section-badge badge-blue fade-up">Who We Are</div>
-      <h2 class="section-title fade-up">About Us</h2>
-    </div>
-
-    <div class="about-grid">
-      <!-- Text -->
-      <div>
-        <div class="about-block fade-up">
-          <h3>Introduction</h3>
-          <p>Welcome to Justice AI, where we harness the power of advanced AI technology to revolutionize the legal industry. Our platform is designed to provide legal professionals and clients with comprehensive insights, secure document management, and intelligent case analysis.</p>
-        </div>
-        <div class="about-block fade-up">
-          <h3>Our Mission</h3>
-          <p>Our mission is to enhance the legal profession with innovative AI solutions that streamline legal processes, improve access to justice, and empower professionals with actionable insights. We strive to create a more efficient and transparent legal environment for everyone.</p>
-        </div>
-      </div>
-
-      <!-- Values -->
-      <div class="values-grid">
-        <div class="value-card glass fade-up">
-          <div class="value-icon">⚡</div>
-          <div class="value-title">Innovation</div>
-          <div class="value-desc">Continuously evolving to bring cutting-edge solutions.</div>
-        </div>
-        <div class="value-card glass fade-up">
-          <div class="value-icon">🛡️</div>
-          <div class="value-title">Integrity</div>
-          <div class="value-desc">Upholding the highest standards of ethics and professionalism.</div>
-        </div>
-        <div class="value-card glass fade-up">
-          <div class="value-icon">🎯</div>
-          <div class="value-title">User-Centric</div>
-          <div class="value-desc">Focusing on the needs and success of our users.</div>
-        </div>
-        <div class="value-card glass fade-up">
-          <div class="value-icon">🤝</div>
-          <div class="value-title">Collaboration</div>
-          <div class="value-desc">Working together to achieve common goals and deliver exceptional results.</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Stats row -->
-    <div class="stats-row">
-      <div class="stat-card glass fade-up"><div class="stat-val">10K+</div><div class="stat-label">Cases Solved</div></div>
-      <div class="stat-card glass fade-up"><div class="stat-val">500+</div><div class="stat-label">Legal Experts</div></div>
-      <div class="stat-card glass fade-up"><div class="stat-val">98%</div><div class="stat-label">Satisfaction</div></div>
-      <div class="stat-card glass fade-up"><div class="stat-val">50+</div><div class="stat-label">Countries</div></div>
-    </div>
-  </div>
-
-  <div class="divider"></div>
-
-  <!-- ── FEATURES ── -->
-  <div id="features-section" style="min-height:100vh;padding:80px 24px 60px;max-width:1200px;margin:0 auto;position:relative;overflow:hidden;">
-    <div class="orb" style="width:600px;height:600px;background:rgba(109,40,217,.1);top:50%;left:50%;transform:translate(-50%,-50%);"></div>
-
-    <div style="text-align:center;margin-bottom:8px;">
-      <div class="section-badge badge-purple fade-up">What We Offer</div>
-      <h2 class="section-title fade-up">Powerful Features</h2>
-      <p style="color:#6b7280;max-width:520px;margin:0 auto;font-size:15px;line-height:1.7;" class="fade-up">Everything you need to navigate the legal system confidently — powered by state-of-the-art AI.</p>
-    </div>
-
-    <div class="features-grid">
-      <!-- Card 1 -->
-      <div class="feature-card fade-up" style="background:linear-gradient(135deg,rgba(37,99,235,.15),rgba(29,78,216,.05));border:1px solid rgba(37,99,235,.2);">
-        <span class="feature-tag" style="background:rgba(37,99,235,.15);color:#93c5fd;border:1px solid rgba(37,99,235,.2);">Insights</span>
-        <div class="feature-icon-wrap">🧠</div>
-        <div class="feature-title">AI-Powered Legal Insights</div>
-        <div class="feature-desc">Our AI analyzes thousands of legal precedents in seconds, providing sharp, actionable insights tailored to your specific case.</div>
-        <div class="feature-more" style="color:#60a5fa;">Learn more →</div>
-      </div>
-
-      <!-- Card 2 -->
-      <div class="feature-card fade-up" style="background:linear-gradient(135deg,rgba(5,150,105,.15),rgba(6,95,70,.05));border:1px solid rgba(5,150,105,.2);">
-        <span class="feature-tag" style="background:rgba(5,150,105,.15);color:#6ee7b7;border:1px solid rgba(5,150,105,.2);">Secure</span>
-        <div class="feature-icon-wrap">🛡️</div>
-        <div class="feature-title">Secure Document Management</div>
-        <div class="feature-desc">Military-grade encryption protects your sensitive legal documents. Store, organize, and share files with complete peace of mind.</div>
-        <div class="feature-more" style="color:#34d399;">Learn more →</div>
-      </div>
-
-      <!-- Card 3 -->
-      <div class="feature-card fade-up" style="background:linear-gradient(135deg,rgba(124,58,237,.15),rgba(91,33,182,.05));border:1px solid rgba(124,58,237,.2);">
-        <span class="feature-tag" style="background:rgba(124,58,237,.15);color:#c4b5fd;border:1px solid rgba(124,58,237,.2);">Analysis</span>
-        <div class="feature-icon-wrap">🔍</div>
-        <div class="feature-title">Intelligent Case Analysis</div>
-        <div class="feature-desc">Get a comprehensive breakdown of your case — risk assessment, possible outcomes, and strategy suggestions powered by machine learning.</div>
-        <div class="feature-more" style="color:#a78bfa;">Learn more →</div>
-      </div>
-
-      <!-- Card 4 -->
-      <div class="feature-card fade-up" style="background:linear-gradient(135deg,rgba(220,38,38,.12),rgba(153,27,27,.05));border:1px solid rgba(220,38,38,.2);">
-        <span class="feature-tag" style="background:rgba(220,38,38,.12);color:#fca5a5;border:1px solid rgba(220,38,38,.2);">24/7</span>
-        <div class="feature-icon-wrap">⏰</div>
-        <div class="feature-title">24/7 Legal Assistance</div>
-        <div class="feature-desc">Legal emergencies don't wait for business hours. Our AI assistant is available around the clock to answer questions and guide your actions.</div>
-        <div class="feature-more" style="color:#f87171;">Learn more →</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Footer -->
-  <footer>
-    <div class="footer-logo">
-      <div style="width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:14px;">⚖️</div>
-      <span style="font-weight:700;font-size:14px;background:linear-gradient(to right,#60a5fa,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Justice AI</span>
-    </div>
-    <p>&copy; <span id="year"></span> Justice AI. All rights reserved.</p>
-    <div class="footer-links">
-      <a href="#">Privacy</a><a href="#">Terms</a><a href="#">Contact</a>
-    </div>
-  </footer>
-</div>
-
-<!-- ════════════════════════════════════════════
-     PAGE: DOCUMENTS
-════════════════════════════════════════════ -->
-<div id="page-documents" class="page">
-  <div style="text-align:center; margin-bottom:40px; padding-top:40px;">
-    <div class="section-badge badge-purple fade-up">Legal Library</div>
-    <h2 class="section-title fade-up">Document Templates</h2>
-    <p style="color:#6b7280; max-width:600px; margin:0 auto; line-height:1.7;" class="fade-up">
-      Access our library of professionally drafted legal document samples and templates. 
-      Click on any document to view a sample PDF.
-    </p>
-  </div>
-
-  <div class="docs-grid">
-    <!-- FIR Card -->
-    <div class="doc-card fade-up">
-      <div class="doc-icon">👮</div>
-      <div class="doc-title">FIR Default Legal Notice</div>
-      <div class="doc-desc">Standard legal notice template for filing a First Information Report (FIR) with law enforcement.</div>
-      <a href="https://docs.google.com/document/d/1gcdSrGicv0ZPO6nIde-4Q5zkdF-3qssg6ay_Pb2vz48/edit?tab=t.0" target="_blank" class="btn-view-doc">📄 View Sample PDF</a>
-    </div>
-
-    <!-- RTI Card -->
-    <div class="doc-card fade-up">
-      <div class="doc-icon">ℹ️</div>
-      <div class="doc-title">RTI Applications</div>
-      <div class="doc-desc">Request information from public authorities under the Right to Information Act with these templates.</div>
-      <a href="https://rajnivas.py.gov.in/rtirnpy/RTI-appln-form.pdf" target="_blank" class="btn-view-doc">📄 View Sample PDF</a>
-    </div>
-
-    <!-- Customer Complaints Card -->
-    <div class="doc-card fade-up">
-      <div class="doc-icon">🛍️</div>
-      <div class="doc-title">Customer Complaints</div>
-      <div class="doc-desc">Formal templates for consumer complaints regarding products, services, or unfair trade practices.</div>
-      <a href="https://www.jotform.com/form-templates/customer-complaint-form" target="_blank" class="btn-view-doc">📄 View Sample Template</a>
-    </div>
-
-    <!-- Cyber Complaints Card -->
-    <div class="doc-card fade-up">
-      <div class="doc-icon">💻</div>
-      <div class="doc-title">Cyber Complaints</div>
-      <div class="doc-desc">Templates for reporting online fraud, harassment, data breaches, and other cyber-related crimes.</div>
-      <a href="https://www.varimanglobal.com/investor/cyber-crime-complaint-receipt.pdf" target="_blank" class="btn-view-doc">📄 View Sample PDF</a>
-    </div>
-
-    <!-- Legal Notice Card -->
-    <div class="doc-card fade-up">
-      <div class="doc-icon">⚖️</div>
-      <div class="doc-title">Legal Notice</div>
-      <div class="doc-desc">General legal notice templates for various civil and criminal matters to formally initiate legal proceedings.</div>
-      <a href="https://www.scribd.com/document/768543336/Legal-Notice-Format" target="_blank" class="btn-view-doc">📄 View Sample Format</a>
-    </div>
-  </div>
-
-  <div style="margin-top: 60px; text-align: center; padding: 40px;" class="glass fade-up">
-    <h3 style="margin-bottom: 12px;">Need a Custom Document?</h3>
-    <p style="color: #9ca3af; margin-bottom: 24px;">Our AI can help you draft a personalized legal document based on your specific situation.</p>
-    <button class="btn-primary" onclick="showPage('home'); document.getElementById('chatSection').scrollIntoView({behavior:'smooth'})">
-      ⚖️ Ask Justice AI to Draft →
-    </button>
-  </div>
-
-  <footer style="margin-top: 80px;">
-    <div class="footer-logo">
-      <div style="width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:14px;">⚖️</div>
-      <span style="font-weight:700;font-size:14px;background:linear-gradient(to right,#60a5fa,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Justice AI</span>
-    </div>
-    <p>&copy; <span id="year-docs"></span> Justice AI. All rights reserved.</p>
-    <div class="footer-links">
-      <a href="#">Privacy</a><a href="#">Terms</a><a href="#">Contact</a>
-    </div>
-  </footer>
-</div>
-
-<!-- ════════════════════════════════════════════
-     PAGE: ADVOCATES (FIND ADVOCATE)
-════════════════════════════════════════════ -->
-<div id="page-advocates" class="page">
-  <div style="text-align:center; margin-bottom:20px; padding-top:40px;">
-    <div class="section-badge badge-blue fade-up">Legal Experts</div>
-    <h2 class="section-title fade-up">Find the Best Advocate</h2>
-    <p style="color:#6b7280; max-width:600px; margin:0 auto; line-height:1.7;" class="fade-up">
-      Search for top-rated legal professionals near you or in any specific city.
-    </p>
-  </div>
-
-  <div class="search-container fade-up">
-    <div class="search-row">
-      <div class="search-input-wrap">
-        <i class="search-icon">📍</i>
-        <input type="text" id="advocateSearchInput" class="search-input" placeholder="Enter City (e.g. New York, Delhi, London)..." onkeyup="if(event.key==='Enter') searchAdvocates()">
-        <button id="detectLocBtn" onclick="detectLocation()" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:rgba(139,92,246,0.1); border:1px solid rgba(139,92,246,0.3); color:#c4b5fd; padding:6px 12px; border-radius:10px; font-size:12px; cursor:pointer; transition:0.3s;" title="Detect My Location">🎯 Auto-Detect</button>
-      </div>
-      <button class="search-btn" onclick="searchAdvocates()">🔍 Search Advocates</button>
-    </div>
-    
-    <div class="filter-chips">
-      <div class="chip active" onclick="setSpecialization('All', this)">All</div>
-      <div class="chip" onclick="setSpecialization('Criminal', this)">Criminal</div>
-      <div class="chip" onclick="setSpecialization('Family', this)">Family</div>
-      <div class="chip" onclick="setSpecialization('Corporate', this)">Corporate</div>
-      <div class="chip" onclick="setSpecialization('Cyber', this)">Cyber</div>
-    </div>
-  </div>
-
-  <div id="advocatesResults" class="advocates-grid">
-    <!-- Results will be injected here -->
-    <div class="no-results">
-      <p>Enter a city to find the best advocates in that location.</p>
-    </div>
-  </div>
-
-  <footer style="margin-top: 80px;">
-    <div class="footer-logo">
-      <div style="width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:14px;">⚖️</div>
-      <span style="font-weight:700;font-size:14px;background:linear-gradient(to right,#60a5fa,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Justice AI</span>
-    </div>
-    <p>&copy; <span id="year-adv"></span> Justice AI. All rights reserved.</p>
-  </footer>
-</div>
-
-
-
-<!-- ════════════════════════════════════════════
-     PAGE: LOGIN
-════════════════════════════════════════════ -->
-<div id="page-login" class="modal-overlay">
-  <div class="auth-card glass">
-    <button class="modal-close" onclick="closeModal('login')">×</button>
-    <div class="auth-inner">
-      <div class="auth-logo" style="background:linear-gradient(135deg,#2563eb,#7c3aed);">⚖️</div>
-        <div class="auth-title">Welcome Back</div>
-        <div class="auth-sub">Sign in to your Justice AI account</div>
-
-        <div class="form-group">
-          <label class="form-label">Username or Email ID</label>
-          <input class="form-input" type="text" id="loginUsername" placeholder="Enter your username or email id" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Password</label>
-          <div class="form-input-wrap">
-            <input class="form-input" type="password" id="loginPassword" placeholder="••••••••" style="padding-right:44px;" />
-            <button class="toggle-pass" onclick="toggleField('loginPassword',this)">👁️</button>
-          </div>
-          <div class="form-row"><a class="form-link" onclick="closeModal('login'); openModal('forgot')">Forgot password?</a></div>
-        </div>
-
-        <button class="btn-auth" style="background:linear-gradient(to right,#2563eb,#7c3aed);" onclick="doLogin()">
-          🔐 Login with Username & Password
-        </button>
-
-        <div class="auth-divider"><span>or</span></div>
-
-        <button class="btn-google" onclick="continueWithGoogle('login')">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-          </svg>
-          Continue with Google
-        </button>
-
-        <div class="auth-footer">
-          Don't have an account? <a onclick="closeModal('login'); openModal('signup')">Create one free</a>
-        </div>
-      </div>
-    </div>
-</div>
-
-<!-- ════════════════════════════════════════════
-     PAGE: SIGNUP
-════════════════════════════════════════════ -->
-<div id="page-signup" class="modal-overlay">
-  <div class="auth-card glass">
-    <button class="modal-close" onclick="closeModal('signup')">×</button>
-    <div class="auth-inner">
-      <div class="auth-logo" style="background:linear-gradient(135deg,#7c3aed,#4f46e5);">🆕</div>
-        <div class="auth-title">Create Account</div>
-        <div class="auth-sub">Join Justice AI — it's free to start</div>
-
-        <div class="perks">
-          <div class="perk"><span class="perk-dot">✓</span> Free Forever</div>
-          <div class="perk"><span class="perk-dot">✓</span> No Credit Card</div>
-          <div class="perk"><span class="perk-dot">✓</span> Cancel Anytime</div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Username or Email ID</label>
-          <input class="form-input" type="text" id="signupUsername" placeholder="Choose a username or email id" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Password</label>
-          <div class="form-input-wrap">
-            <input class="form-input" type="password" id="signupPassword" placeholder="Create a strong password" style="padding-right:44px;" />
-            <button class="toggle-pass" onclick="toggleField('signupPassword',this)">👁️</button>
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Confirm Password</label>
-          <div class="form-input-wrap">
-            <input class="form-input" type="password" id="signupConfirm" placeholder="Repeat your password" style="padding-right:44px;" />
-            <button class="toggle-pass" onclick="toggleField('signupConfirm',this)">👁️</button>
-          </div>
-        </div>
-
-        <button class="btn-auth" style="background:linear-gradient(to right,#7c3aed,#4f46e5);" onclick="doSignup()">
-          🆕 Create Account
-        </button>
-
-        <div class="auth-divider"><span>or</span></div>
-
-        <button class="btn-google" onclick="continueWithGoogle('signup')">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-          </svg>
-          Continue with Google
-        </button>
-
-        <div class="auth-footer">
-          Already have an account? <a onclick="closeModal('signup'); openModal('login')">Sign in</a>
-        </div>
-      </div>
-    </div>
-</div>
-
-<!-- ════════════════════════════════════════════
-     PAGE: FORGOT PASSWORD
-════════════════════════════════════════════ -->
-<div id="page-forgot" class="modal-overlay">
-  <div class="auth-card glass">
-    <button class="modal-close" onclick="closeModal('forgot')">×</button>
-    <div class="auth-inner">
-      <div class="auth-logo" style="background:linear-gradient(135deg,#f59e0b,#ef4444);">🔑</div>
-        <div class="auth-title">Reset Password</div>
-        <div class="auth-sub">Enter your username and new password</div>
-
-        <div class="form-group">
-          <label class="form-label">Username or Email ID</label>
-          <input class="form-input" type="text" id="resetUsername" placeholder="Enter your username or email id" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">New Password</label>
-          <div class="form-input-wrap">
-            <input class="form-input" type="password" id="resetPassword" placeholder="Enter new password" style="padding-right:44px;" />
-            <button class="toggle-pass" onclick="toggleField('resetPassword',this)">👁️</button>
-          </div>
-        </div>
-
-        <button class="btn-auth" style="background:linear-gradient(to right,#f59e0b,#ef4444);" onclick="doReset()">
-          🔑 Update Password
-        </button>
-
-        <div class="auth-footer">
-          Remember it? <a onclick="closeModal('forgot'); openModal('login')">Back to Login</a>
-        </div>
-      </div>
-    </div>
-</div>
-
-<!-- ════════════════════════════════════════════
-     PAGE: SETTINGS
-     ════════════════════════════════════════════ -->
-<div id="page-settings" class="modal-overlay">
-  <div class="auth-card glass">
-    <button class="modal-close" onclick="closeModal('settings')">×</button>
-    <div class="auth-inner">
-      <div class="auth-logo" style="background:linear-gradient(135deg,#10b981,#3b82f6);">⚙️</div>
-      <div class="auth-title">Account Settings</div>
-      <div class="auth-sub">Customize your profile and preferences</div>
-
-      <div class="form-group">
-        <label class="form-label">New Username</label>
-        <input class="form-input" type="text" id="settingsNewUsername" placeholder="Enter new username" />
-      </div>
-      
-      <div class="form-group">
-        <label class="form-label">Current Password</label>
-        <div class="form-input-wrap">
-          <input class="form-input" type="password" id="settingsPassword" placeholder="Confirm with password" style="padding-right:44px;" />
-          <button class="toggle-pass" onclick="toggleField('settingsPassword',this)">👁️</button>
-        </div>
-      </div>
-
-      <button class="btn-auth" style="background:linear-gradient(to right,#10b981,#3b82f6);" onclick="doUpdateUsername()">
-        💾 Save Changes
-      </button>
-
-      <div class="auth-footer" style="margin-top:20px;">
-        <a onclick="closeModal('settings')" style="color:#6b7280;">Cancel</a>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ════════════════════════════════════════════
-     MEDIA URL ANALYZE MODAL
-     ════════════════════════════════════════════ -->
-<div id="page-media" class="modal-overlay">
-  <div class="media-modal glass">
-    <button class="modal-close" onclick="closeModal('media')">×</button>
-    <h3>🔗 Analyze URL</h3>
-    <p>Enter a news article, case file, or legal document URL to analyze.</p>
-    
-    <input type="url" id="mediaUrl" placeholder="https://example.com/article" />
-    
-    <div class="media-modal-btns">
-      <button class="btn-cancel" onclick="closeModal('media')">Cancel</button>
-      <button class="btn-analyze" id="analyzeBtn" onclick="analyzeMedia()">
-        ⚖️ Analyze
-      </button>
-    </div>
-    
-    <div class="media-result" id="mediaResult">
-      <h4>📊 Analysis Result</h4>
-      <p id="mediaResultContent"></p>
-    </div>
-  </div>
-</div>
-
-<!-- Back to top -->
-<button id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
-
-<!-- ════════════════════════════════════════════
-     JAVASCRIPT
-════════════════════════════════════════════ -->
-<script>
-  const API = 'https://justiceai01.onrender.com';
-  let isListening = false;
-  let recognition = null;
-
-  // ── Year
-  const yearStr = new Date().getFullYear();
-  if(document.getElementById('year')) document.getElementById('year').textContent = yearStr;
-  if(document.getElementById('year-docs')) document.getElementById('year-docs').textContent = yearStr;
-  if(document.getElementById('year-adv')) document.getElementById('year-adv').textContent = yearStr;
-
-  // ── SPA Navigation
-  function showPage(name) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    const target = document.getElementById('page-' + name);
-    if (target) {
-      target.classList.add('active');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    // Update active nav link
-    document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
-    const activeLink = document.getElementById('nav-' + name);
-    if (activeLink) activeLink.classList.add('active');
-
-    // Trigger animations on new page
-    setTimeout(triggerFadeUps, 100);
-  }
-
-  // ── Modal Actions
-  function openModal(id) {
-    // Hide all modals first
-    document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
-    // Show the requested modal
-    const modal = document.getElementById('page-' + id);
-    if (modal) {
-      modal.classList.add('active');
-      // Focus on first input field
-      setTimeout(() => {
-        const firstInput = modal.querySelector('input');
-        if (firstInput) firstInput.focus();
-      }, 100);
-    }
-  }
-
-  function closeModal(id) {
-    const modal = document.getElementById('page-' + id);
-    if (modal) {
-      modal.classList.remove('active');
-    }
-  }
-
-  // Close modal when clicking outside
-  document.addEventListener('click', function(e) {
-    if (e.target.classList.contains('modal-overlay') && e.target.classList.contains('active')) {
-      e.target.classList.remove('active');
-    }
-  });
-
-  // ── Mobile Menu
-  function toggleMenu() {
-    const menu = document.getElementById('mobileMenu');
-    menu.classList.toggle('open');
-  }
-
-  // ── Scroll effects
-  window.addEventListener('scroll', () => {
-    // Progress bar
-    const total = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-    const pct = total > 0 ? (window.scrollY / total) * 100 : 0;
-    document.getElementById('progressBar').style.width = pct + '%';
-
-    // Navbar shrink
-    const nav = document.getElementById('navbar');
-    if (window.scrollY > 50) nav.classList.add('glass-nav', 'scrolled');
-    else nav.classList.remove('glass-nav', 'scrolled');
-
-    // Back to top
-    const btn = document.getElementById('backToTop');
-    if (window.scrollY > 400) btn.classList.add('show');
-    else btn.classList.remove('show');
-
-    // Fade-up elements
-    triggerFadeUps();
-  });
-
-  function triggerFadeUps() {
-    document.querySelectorAll('.fade-up:not(.visible)').forEach(el => {
-      const rect = el.getBoundingClientRect();
-      if (rect.top < window.innerHeight - 60) el.classList.add('visible');
-    });
-  }
-  window.addEventListener('load', triggerFadeUps);
-
-  // ── Password toggle
-  function toggleField(id, btn) {
-    const input = document.getElementById(id);
-    if (input.type === 'password') { input.type = 'text'; btn.textContent = '🙈'; }
-    else { input.type = 'password'; btn.textContent = '👁️'; }
-  }
-
-  // ── AUTH: Login
-  async function doLogin() {
-    const username = document.getElementById('loginUsername').value.trim();
-    const password = document.getElementById('loginPassword').value;
-    
-    // Validation
-    if (!username || !password) {
-      showAuthError('login', 'Please fill in all fields.');
-      return;
-    }
-
-    // Show loading state
-    const btn = document.querySelector('#page-login .btn-auth');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '⏳ Logging in...';
-    btn.disabled = true;
-
-    try {
-      const res = await fetch(API + '/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      });
-      const data = await res.json();
-      
-      if (data.success) {
-        localStorage.setItem('user', username);
-        localStorage.setItem('isLoggedIn', 'true');
-        showAuthSuccess('login', '✅ Login successful! Redirecting...');
-        
-        // Update navbar
-        updateNavbarForLoggedInUser(username);
-        
-        setTimeout(() => {
-          closeModal('login');
-          clearAuthFields('login');
-        }, 1500);
-      } else {
-        showAuthError('login', data.message || 'Invalid credentials.');
-      }
-    } catch (e) {
-      console.error('Login error:', e);
-      showAuthError('login', 'Cannot reach server. Is the backend running on port 3000?');
-    } finally {
-      btn.innerHTML = originalText;
-      btn.disabled = false;
-    }
-  }
-
-  // Helper functions for auth feedback
-  function showAuthError(pageId, message) {
-    const page = document.getElementById('page-' + pageId);
-    let errorDiv = page.querySelector('.auth-error');
-    if (!errorDiv) {
-      errorDiv = document.createElement('div');
-      errorDiv.className = 'auth-error';
-      errorDiv.style.cssText = 'margin-bottom:16px;padding:12px 16px;border-radius:10px;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:#fca5a5;font-size:13px;';
-      const firstGroup = page.querySelector('.form-group');
-      page.querySelector('.auth-inner').insertBefore(errorDiv, firstGroup);
-    }
-    errorDiv.textContent = message;
-    errorDiv.style.display = 'block';
-  }
-
-  function showAuthSuccess(pageId, message) {
-    const page = document.getElementById('page-' + pageId);
-    let successDiv = page.querySelector('.auth-success');
-    if (!successDiv) {
-      successDiv = document.createElement('div');
-      successDiv.className = 'auth-success';
-      successDiv.style.cssText = 'margin-bottom:16px;padding:12px 16px;border-radius:10px;background:rgba(52,211,153,.15);border:1px solid rgba(52,211,153,.3);color:#6ee7b7;font-size:13px;';
-      const firstGroup = page.querySelector('.form-group');
-      page.querySelector('.auth-inner').insertBefore(successDiv, firstGroup);
-    }
-    successDiv.textContent = message;
-    successDiv.style.display = 'block';
-    // Hide any error
-    const errorDiv = page.querySelector('.auth-error');
-    if (errorDiv) errorDiv.style.display = 'none';
-  }
-
-  function clearAuthFields(pageId) {
-    const page = document.getElementById('page-' + pageId);
-    page.querySelectorAll('input').forEach(input => input.value = '');
-    const errorDiv = page.querySelector('.auth-error');
-    if (errorDiv) errorDiv.style.display = 'none';
-    const successDiv = page.querySelector('.auth-success');
-    if (successDiv) successDiv.style.display = 'none';
-  }
-
-  function updateNavbarForLoggedInUser(username) {
-    const navLinks = document.querySelector('.nav-links');
-    navLinks.innerHTML = `
-      <li><a onclick="showPage('home')" id="nav-home" class="active">Home</a></li>
-      <li><a onclick="document.getElementById('about-section').scrollIntoView({behavior:'smooth'})">About Us</a></li>
-      <li><a onclick="document.getElementById('features-section').scrollIntoView({behavior:'smooth'})">Features</a></li>
-      <li><a onclick="showPage('documents')" id="nav-documents">Documents</a></li>
-      <li><a onclick="showPage('advocates')" id="nav-advocates">Find Advocate</a></li>
-      <li><a onclick="openModal('settings')">Settings</a></li>
-      <li><a onclick="logout()">Logout (${username})</a></li>
-    `;
-
-    // Also update mobile menu
-    const mobileMenu = document.getElementById('mobileMenu');
-    mobileMenu.innerHTML = `
-      <a onclick="showPage('home');toggleMenu()">🏠 Home</a>
-      <a onclick="showPage('about');toggleMenu()">ℹ️ About Us</a>
-      <a onclick="showPage('features');toggleMenu()">⭐ Features</a>
-      <a onclick="showPage('documents');toggleMenu()">📄 Documents</a>
-      <a onclick="showPage('advocates');toggleMenu()">⚖️ Find Advocate</a>
-      <a onclick="openModal('settings');toggleMenu()">⚙️ Settings</a>
-      <a onclick="logout()">🚪 Logout (${username})</a>
-    `;
-  }
-
-  function logout() {
-    localStorage.removeItem('user');
-    localStorage.removeItem('isLoggedIn');
-    location.reload();
-  }
-
-  // ── SETTINGS: Update Username
-  async function doUpdateUsername() {
-    const oldUsername = localStorage.getItem('user');
-    const newUsername = document.getElementById('settingsNewUsername').value.trim();
-    const password    = document.getElementById('settingsPassword').value;
-
-    if (!newUsername || !password) {
-      showAuthError('settings', 'Please fill in all fields.');
-      return;
-    }
-
-    if (newUsername === oldUsername) {
-      showAuthError('settings', 'New username must be different.');
-      return;
-    }
-
-    const btn = document.querySelector('#page-settings .btn-auth');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '⏳ Saving...';
-    btn.disabled = true;
-
-    try {
-      const res = await fetch(API + '/update-username', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ oldUsername, newUsername, password })
-      });
-      const data = await res.json();
-
-      if (data.success) {
-        localStorage.setItem('user', newUsername);
-        showAuthSuccess('settings', '✅ Username updated successfully!');
-        
-        // Update navbar immediately
-        updateNavbarForLoggedInUser(newUsername);
-        
-        setTimeout(() => {
-          closeModal('settings');
-          clearAuthFields('settings');
-        }, 1500);
-      } else {
-        showAuthError('settings', data.message || 'Update failed.');
-      }
-    } catch (e) {
-      console.error('Update username error:', e);
-      showAuthError('settings', 'Server error. Please try again.');
-    } finally {
-      btn.innerHTML = originalText;
-      btn.disabled = false;
-    }
-  }
-
-  // ── AUTH: Signup
-  async function doSignup() {
-    const username = document.getElementById('signupUsername').value.trim();
-    const password = document.getElementById('signupPassword').value;
-    const confirm  = document.getElementById('signupConfirm').value;
-    
-    // Validation
-    if (!username || !password) {
-      showAuthError('signup', 'Please fill in all fields.');
-      return;
-    }
-    if (password !== confirm) {
-      showAuthError('signup', 'Passwords do not match!');
-      return;
-    }
-    if (password.length < 4) {
-      showAuthError('signup', 'Password must be at least 4 characters.');
-      return;
-    }
-
-    // Show loading state
-    const btn = document.querySelector('#page-signup .btn-auth');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '⏳ Creating account...';
-    btn.disabled = true;
-
-    try {
-      const res = await fetch(API + '/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      });
-      const data = await res.json();
-      
-      if (data.success) {
-        showAuthSuccess('signup', '✅ Account created! Redirecting to login...');
-        setTimeout(() => {
-          closeModal('signup');
-          openModal('login');
-          clearAuthFields('signup');
-        }, 1500);
-      } else {
-        showAuthError('signup', data.message || 'Registration failed.');
-      }
-    } catch (e) {
-      console.error('Signup error:', e);
-      showAuthError('signup', 'Cannot reach server. Is the backend running on port 3000?');
-    } finally {
-      btn.innerHTML = originalText;
-      btn.disabled = false;
-    }
-  }
-
-  // ── AUTH: Reset Password
-  async function doReset() {
-    const username    = document.getElementById('resetUsername').value.trim();
-    const newPassword = document.getElementById('resetPassword').value;
-    
-    // Validation
-    if (!username || !newPassword) {
-      showAuthError('forgot', 'Please fill in all fields.');
-      return;
-    }
-    if (newPassword.length < 4) {
-      showAuthError('forgot', 'Password must be at least 4 characters.');
-      return;
-    }
-
-    // Show loading state
-    const btn = document.querySelector('#page-forgot .btn-auth');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '⏳ Resetting password...';
-    btn.disabled = true;
-
-    try {
-      const res = await fetch(API + '/reset', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, newPassword })
-      });
-      const data = await res.json();
-      
-      if (data.success) {
-        showAuthSuccess('forgot', '✅ Password reset! Redirecting to login...');
-        setTimeout(() => {
-          closeModal('forgot');
-          openModal('login');
-          clearAuthFields('forgot');
-        }, 1500);
-      } else {
-        showAuthError('forgot', data.message || 'Password reset failed.');
-      }
-    } catch (e) {
-      console.error('Reset error:', e);
-      showAuthError('forgot', 'Cannot reach server. Is the backend running on port 3000?');
-    } finally {
-      btn.innerHTML = originalText;
-      btn.disabled = false;
-    }
-  }
-
-  // ── AUTH: Continue with Google
-  function continueWithGoogle(actionContext) {
-    // This is currently a mock implementation as requested.
-    // Replace with real Google Identity Services or Firebase Auth later.
-    alert(`⚡ Google OAuth flow initiated for ${actionContext}!\n\n(Backend verification required)`);
-    
-    // Simulate successful login
-    setTimeout(() => {
-      localStorage.setItem('user', 'Google User');
-      alert('✅ Successfully authenticated with Google!');
-      showPage('home');
-    }, 1200);
-  }
-
-  // ── CHAT
-  function showError(msg) {
-    const bar = document.getElementById('errorBar');
-    bar.textContent = msg; bar.style.display = 'block';
-    setTimeout(() => bar.style.display = 'none', 6000);
-  }
-
-  function addBubble(role, text) {
-    const box = document.getElementById('historyBox');
-    const empty = document.getElementById('emptyState');
-    if (empty) empty.style.display = 'none';
-    document.getElementById('clearBtn').style.display = 'block';
-    document.getElementById('historyLabel').style.display = 'block';
-
-    const row = document.createElement('div');
-    row.className = 'bubble-row ' + role;
-    row.innerHTML = `
-      <div class="avatar ${role}">${role === 'user' ? '👤' : '🤖'}</div>
-      <div class="bubble ${role}">${text}</div>
-    `;
-    box.appendChild(row);
-    box.scrollTop = box.scrollHeight;
-  }
-
-  function showTyping() {
-    const box = document.getElementById('historyBox');
-    const typing = document.createElement('div');
-    typing.className = 'bubble-row ai'; typing.id = 'typingIndicator';
-    typing.innerHTML = `
-      <div class="avatar ai">🤖</div>
-      <div class="bubble ai">
-        <div class="typing-bubble">
-          <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-        </div>
-      </div>`;
-    box.appendChild(typing);
-    box.scrollTop = box.scrollHeight;
-  }
-
-  function removeTyping() {
-    const t = document.getElementById('typingIndicator');
-    if (t) t.remove();
-  }
-
-  async function sendMessage() {
-    const input = document.getElementById('messageInput');
-    const msg = input.value.trim();
-    if (!msg) return;
-
-    addBubble('user', msg);
-    input.value = '';
-    document.getElementById('sendBtn').disabled = true;
-    showTyping();
-
-    try {
-      const res = await fetch(API + '/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: msg })
-      });
-      const data = await res.json();
-      removeTyping();
-      addBubble('ai', data.reply || 'No response received.');
-    } catch (err) {
-      removeTyping();
-      showError('❌ Could not reach server. Ensure the backend is running on port 3000.');
-    } finally {
-      document.getElementById('sendBtn').disabled = false;
-    }
-  }
-
-  function handleKey(e) {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
-  }
-
-  // ── Image Gallery Feature
-  async function handleImageUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      showError('Please select a valid image file.');
-      return;
-    }
-
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      showError('Image size must be less than 5MB.');
-      return;
-    }
-
-    // Create preview URL
-    const imageUrl = URL.createObjectURL(file);
-    
-    // Add user image bubble
-    addImageBubble('user', imageUrl);
-    
-    // Show typing indicator
-    showTyping();
-
-    // Convert image to base64
-    const reader = new FileReader();
-    reader.onload = async function() {
-      const base64Image = reader.result;
-      
-      try {
-        const res = await fetch(API + '/chat-image', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            image: base64Image,
-            filename: file.name
-          })
-        });
-        const data = await res.json();
-        removeTyping();
-        addBubble('ai', data.reply || 'Image analyzed. How can I help you with this?');
-      } catch (err) {
-        removeTyping();
-        showError('❌ Could not analyze image. Ensure the backend is running.');
-      }
-    };
-    reader.readAsDataURL(file);
-    
-    // Reset file input
-    event.target.value = '';
-  }
-
-  function addImageBubble(role, imageUrl) {
-    const box = document.getElementById('historyBox');
-    const empty = document.getElementById('emptyState');
-    if (empty) empty.remove();
-
-    const row = document.createElement('div');
-    row.className = `bubble-row ${role}`;
-    row.innerHTML = `
-      <div class="avatar ${role}">${role === 'user' ? '👤' : '⚖️'}</div>
-      <img src="${imageUrl}" class="bubble-image" onclick="openImageModal('${imageUrl}')" title="Click to enlarge">
-    `;
-    box.appendChild(row);
-    box.scrollTop = box.scrollHeight;
-    
-    document.getElementById('clearBtn').style.display = 'block';
-  }
-
-  function openImageModal(url) {
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay active';
-    modal.innerHTML = `
-      <button class="modal-close" onclick="this.parentElement.remove()">&times;</button>
-      <img src="${url}" style="max-width:90%;max-height:85vh;border-radius:12px;object-fit:contain;">
-    `;
-    document.body.appendChild(modal);
-    modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
-  }
-
-  function clearHistory() {
-    const box = document.getElementById('historyBox');
-    box.innerHTML = `<div class="history-empty" id="emptyState">
-      <div class="history-empty-icon">⚖️</div>
-      <p style="font-size:14px;">Describe your legal problem below — I'll provide instant AI-powered guidance.</p>
-    </div>`;
-    document.getElementById('clearBtn').style.display = 'none';
-    document.getElementById('historyLabel').style.display = 'none';
-  }
-
-  function toggleVoice() {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) return alert('Voice input not supported. Use Chrome or Edge.');
-
-    const btn = document.getElementById('voiceBtn');
-
-    if (isListening) {
-      recognition.stop(); isListening = false;
-      btn.textContent = '🎤 Speak Your Problem';
-      btn.classList.remove('listening');
-      return;
-    }
-
-    recognition = new SpeechRecognition();
-    recognition.lang = 'en-US';
-    recognition.interimResults = false;
-
-    recognition.onstart = () => {
-      isListening = true;
-      btn.textContent = '🛑 Stop Listening';
-      btn.classList.add('listening');
-    };
-    recognition.onresult = (e) => {
-      const text = e.results[0][0].transcript;
-      const input = document.getElementById('messageInput');
-      input.value = input.value ? input.value + ' ' + text : text;
-    };
-    recognition.onerror = (e) => {
-      console.error(e); isListening = false;
-      btn.textContent = '🎤 Speak Your Problem';
-      btn.classList.remove('listening');
-    };
-    recognition.onend = () => {
-      isListening = false;
-      btn.textContent = '🎤 Speak Your Problem';
-      btn.classList.remove('listening');
-    };
-    recognition.start();
-  }
-
-  // ── Media URL Analysis
-  function openMediaModal() {
-    document.getElementById('mediaUrl').value = '';
-    document.getElementById('mediaResult').classList.remove('show');
-    document.getElementById('mediaResultContent').textContent = '';
-    openModal('media');
-  }
-
-  async function analyzeMedia() {
-    const url = document.getElementById('mediaUrl').value.trim();
-    const resultDiv = document.getElementById('mediaResult');
-    const resultContent = document.getElementById('mediaResultContent');
-    const analyzeBtn = document.getElementById('analyzeBtn');
-
-    if (!url) {
-      resultDiv.classList.add('show');
-      resultContent.textContent = 'Please enter a valid URL.';
-      return;
-    }
-
-    // Validate URL format
-    try {
-      new URL(url);
-    } catch (e) {
-      resultDiv.classList.add('show');
-      resultContent.textContent = 'Please enter a valid URL (e.g., https://example.com).';
-      return;
-    }
-
-    analyzeBtn.disabled = true;
-    analyzeBtn.textContent = '⏳ Analyzing...';
-    resultDiv.classList.add('show');
-    resultContent.textContent = 'Fetching and analyzing the URL content...';
-
-    try {
-      const response = await fetch('/analyze-url', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url })
-      });
-
-      const data = await response.json();
-
-      if (data.success && data.analysis) {
-        resultContent.textContent = data.analysis;
-      } else {
-        resultContent.textContent = data.message || 'Failed to analyze the URL. Please try again.';
-      }
-    } catch (err) {
-      console.error('Media analysis error:', err);
-      resultContent.textContent = 'Error connecting to server. Please try again.';
-    }
-
-    analyzeBtn.disabled = false;
-    analyzeBtn.textContent = '⚖️ Analyze';
-  }
-
-  // ── ADVOCATE FINDER LOGIC
-  let selectedSpec = 'All';
-  const mockAdvocates = [
-    { name: "Sarah Jenkins", city: "New York", spec: "Criminal", exp: 12, rating: 4.9, cases: 450 },
-    { name: "Robert Chen", city: "New York", spec: "Corporate", exp: 15, rating: 4.8, cases: 320 },
-    { name: "Elena Rodriguez", city: "New York", spec: "Family", exp: 8, rating: 4.7, cases: 210 },
-    { name: "Michael Strauss", city: "New York", spec: "Cyber", exp: 7, rating: 4.6, cases: 140 },
-    { name: "Jennifer Wu", city: "New York", spec: "Criminal", exp: 11, rating: 4.8, cases: 380 },
-    { name: "David Goldberg", city: "New York", spec: "Corporate", exp: 22, rating: 5.0, cases: 950 },
-    
-    { name: "Rajesh Sharma", city: "Delhi", spec: "Criminal", exp: 20, rating: 5.0, cases: 800 },
-    { name: "Priya Gupta", city: "Delhi", spec: "Family", exp: 10, rating: 4.6, cases: 180 },
-    { name: "Aman Verma", city: "Delhi", spec: "Cyber", exp: 6, rating: 4.9, cases: 95 },
-    { name: "Sanjay Malhotra", city: "Delhi", spec: "Corporate", exp: 14, rating: 4.7, cases: 290 },
-    { name: "Ananya Iyer", city: "Delhi", spec: "Criminal", exp: 12, rating: 4.8, cases: 410 },
-    { name: "Vikram Singh", city: "Delhi", spec: "Family", exp: 15, rating: 4.9, cases: 530 },
-    
-    { name: "David Miller", city: "London", spec: "Corporate", exp: 18, rating: 4.9, cases: 540 },
-    { name: "James Wilson", city: "London", spec: "Criminal", exp: 14, rating: 4.7, cases: 290 },
-    { name: "Emma Thompson", city: "London", spec: "Cyber", exp: 9, rating: 4.8, cases: 130 },
-    { name: "Oliver Wright", city: "London", spec: "Family", exp: 11, rating: 4.6, cases: 210 },
-    { name: "Sophia Bennett", city: "London", spec: "Corporate", exp: 20, rating: 5.0, cases: 880 },
-    { name: "Thomas Brooks", city: "London", spec: "Criminal", exp: 13, rating: 4.7, cases: 340 }
-  ];
-
-  async function detectLocation() {
-    const btn = document.getElementById('detectLocBtn');
-    const input = document.getElementById('advocateSearchInput');
-    
-    if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser.");
-      return;
-    }
-
-    btn.innerHTML = '⏳ Detecting...';
-    btn.disabled = true;
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const lat = position.coords.latitude;
-        const lon = position.coords.longitude;
-        
-        try {
-          // Use OpenStreetMap Nominatim for Reverse Geocoding (Free, no API key required)
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
-          const data = await res.json();
-          
-          // Try to get city, town, village, or state
-          const city = data.address.city || data.address.town || data.address.village || data.address.suburb || data.address.state || "India";
-          
-          input.value = city;
-          btn.innerHTML = '✅ Found';
-          searchAdvocates();
-          
-          setTimeout(() => { 
-            btn.innerHTML = '🎯 Auto-Detect';
-            btn.disabled = false;
-          }, 3000);
-        } catch (err) {
-          console.error("Reverse Geocoding error:", err);
-          input.value = "New York"; // Fallback
-          searchAdvocates();
-          btn.innerHTML = '🎯 Auto-Detect';
-          btn.disabled = false;
-        }
-      },
-      (error) => {
-        console.error("Geolocation error:", error);
-        btn.innerHTML = '❌ Failed';
-        btn.disabled = false;
-        alert("Permission denied or location unavailable. Please enter your city manually.");
-        setTimeout(() => btn.innerHTML = '🎯 Auto-Detect', 3000);
-      }
-    );
-  }
-
-  function setSpecialization(spec, el) {
-    selectedSpec = spec;
-    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-    el.classList.add('active');
-    searchAdvocates();
-  }
-
-  function generateAdvocatesForCity(cityName) {
-    const specs = ["Criminal", "Family", "Corporate", "Cyber", "Civil"];
-    const names = [
-      "Adv. Vikram Sethi", "Adv. Anjali Rao", "Adv. Sameer Khan", 
-      "Adv. Meera Nair", "Adv. Rohan Deshmukh", "Adv. Ishani Verma",
-      "Adv. Arjun Kapoor", "Adv. Sneha Kulkarni", "Adv. Faisal Ahmed"
-    ];
-    
-    // Generate 6 diverse advocates for the city
-    return Array.from({ length: 6 }, (_, i) => ({
-      name: names[i % names.length],
-      city: cityName,
-      spec: specs[i % specs.length],
-      exp: 5 + Math.floor(Math.random() * 20),
-      rating: (4.5 + Math.random() * 0.5).toFixed(1),
-      cases: 100 + Math.floor(Math.random() * 900)
-    }));
-  }
-
-  function searchAdvocates() {
-    const rawQuery = document.getElementById('advocateSearchInput').value.trim();
-    const query = rawQuery.toLowerCase();
-    const resultsBox = document.getElementById('advocatesResults');
-    
-    if (!query) {
-      resultsBox.innerHTML = `<div class="no-results"><p>Enter a city to find the best advocates in that location.</p></div>`;
-      return;
-    }
-
-    // Combine static mock data with dynamic generator if needed
-    let filtered = mockAdvocates.filter(adv => {
-      const cityMatch = adv.city.toLowerCase().includes(query);
-      const specMatch = selectedSpec === 'All' || adv.spec === selectedSpec;
-      return cityMatch && specMatch;
-    });
-
-    // If no static results, generate dynamic ones for the city
-    if (filtered.length === 0) {
-      const generated = generateAdvocatesForCity(rawQuery);
-      filtered = generated.filter(adv => selectedSpec === 'All' || adv.spec === selectedSpec);
-    }
-
-    if (filtered.length === 0) {
-      resultsBox.innerHTML = `<div class="no-results"><p>No advocates found for ${selectedSpec} law in this area.</p></div>`;
-      return;
-    }
-
-    resultsBox.innerHTML = `
-      <div style="grid-column:1/-1; margin-bottom:10px;">
-        <h3 style="font-size:16px; color:#fff;">📍 Verified Advocates in ${rawQuery}</h3>
-      </div>
-    ` + filtered.map(adv => `
-      <div class="adv-card fade-up visible">
-        <div class="adv-header">
-          <div class="adv-img" style="display:flex;align-items:center;justify-content:center;font-size:30px;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2);">⚖️</div>
-          <div class="adv-info">
-            <h4>${adv.name}</h4>
-            <div class="adv-spec">${adv.spec} Law</div>
-          </div>
-        </div>
-        <div class="adv-stats">
-          <div class="stat-item"><span class="stat-val-sm">${adv.exp}y</span><span class="stat-label-sm">Exp</span></div>
-          <div class="stat-item"><span class="stat-val-sm">⭐ ${adv.rating}</span><span class="stat-label-sm">Rating</span></div>
-          <div class="stat-item"><span class="stat-val-sm">${adv.cases}+</span><span class="stat-label-sm">Cases</span></div>
-        </div>
-        <p style="font-size:13px; color:#9ca3af; margin-bottom:16px;">Expert legal representation for ${adv.spec.toLowerCase()} matters in ${adv.city}.</p>
-        <div class="adv-footer">
-          <button class="btn-contact" onclick="alert('Connecting you with ${adv.name} for a consultation...')">Connect Now</button>
-        </div>
-      </div>
-    `).join('');
-  }
-
-  // ── Initialization
-  window.addEventListener('load', () => {
-    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-    const user = localStorage.getItem('user');
-    if (isLoggedIn && user) {
-      updateNavbarForLoggedInUser(user);
-    }
-  });
-</script>
-</body>
-</html>
+require('dotenv').config();
+
+const express = require("express");
+
+const cors = require("cors");
+
+const fs = require("fs");
+
+const path = require("path");
+
+
+function loadUsers() {
+
+  try {
+
+    return JSON.parse(fs.readFileSync(__dirname + '/users.json', 'utf8'));
+
+  } catch (err) {
+
+    return [];
+
+  }
+
+}
+
+
+function saveUsers(users) {
+
+  fs.writeFileSync(__dirname + '/users.json', JSON.stringify(users, null, 2));
+
+}
+
+
+const app = express();
+
+app.use(express.json());
+
+app.use(cors());
+
+
+// ─── CONFIG ──────────────────────────────────────────────────────────────────
+
+// Using Groq (free tier — https://console.groq.com) with llama3 model
+
+const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
+
+const GROQ_MODEL   = "openai/gpt-oss-120b"; // Free & fast Groq model
+
+
+const SYSTEM_PROMPT = `You are Justice AI, a highly knowledgeable and empathetic AI legal assistant. 
+
+Your role is to:
+
+1. Listen carefully to the user's legal problem.
+
+2. Explain their legal rights in simple, clear language.
+
+3. Suggest practical next steps they should take.
+
+4. Draft a professional complaint letter if requested.
+
+5. Recommend when to seek professional legal counsel.
+
+Always be professional, compassionate, and thorough. Format your responses clearly with sections when helpful.`;
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+
+// TEST ROUTE
+
+app.get("/", (req, res) => {
+
+  res.sendFile(path.join(__dirname, "./index.html"));
+
+});
+
+
+// AUTHENTICATION
+
+app.post("/signup", (req, res) => {
+
+  const { username, password } = req.body;
+
+  if (!username || !password) return res.json({ success: false, message: "Missing fields" });
+
+
+  const users = loadUsers();
+
+
+  if (users.find(u => u.username === username)) {
+
+    return res.json({ success: false, message: "Username already exists!" });
+
+  }
+
+
+  users.push({ username, password });
+
+  saveUsers(users);
+
+  res.json({ success: true, message: "Signup successful" });
+
+});
+
+
+app.post("/login", (req, res) => {
+
+  const { username, password } = req.body;
+
+  const users = loadUsers();
+
+
+  const user = users.find(u => u.username === username && u.password === password);
+
+  if (user) {
+
+    res.json({ success: true, message: "Login successful" });
+
+  } else {
+
+    res.json({ success: false, message: "Invalid username or password" });
+
+  }
+
+});
+
+
+app.post("/reset", (req, res) => {
+
+  const { username, newPassword } = req.body;
+
+  if (!username || !newPassword) return res.json({ success: false, message: "Missing fields" });
+
+
+  const users = loadUsers();
+
+  const userIndex = users.findIndex(u => u.username === username);
+
+
+  if (userIndex !== -1) {
+
+    users[userIndex].password = newPassword;
+
+    saveUsers(users);
+
+    res.json({ success: true, message: "Password updated successfully!" });
+
+  } else {
+
+    res.json({ success: false, message: "Username not found." });
+
+  }
+
+});
+
+
+app.post("/update-username", (req, res) => {
+
+  const { oldUsername, newUsername, password } = req.body;
+
+  if (!oldUsername || !newUsername || !password) {
+
+    return res.json({ success: false, message: "Missing required fields." });
+
+  }
+
+
+  const users = loadUsers();
+
+  const userIndex = users.findIndex(u => u.username === oldUsername && u.password === password);
+
+
+  if (userIndex === -1) {
+
+    return res.json({ success: false, message: "Invalid current username or password." });
+
+  }
+
+
+  if (users.find(u => u.username === newUsername)) {
+
+    return res.json({ success: false, message: "New username already exists." });
+
+  }
+
+
+  users[userIndex].username = newUsername;
+
+  saveUsers(users);
+
+  res.json({ success: true, message: "Username updated successfully!" });
+
+});
+
+
+// CHAT API (Groq)
+
+app.post("/chat", async (req, res) => {
+
+  const { message } = req.body;
+
+
+  if (!message) {
+
+    return res.json({ reply: "Please provide a message." });
+
+  }
+
+
+  const apiKey = process.env.GROQ_API_KEY;
+
+
+  if (!apiKey) {
+
+    return res.json({
+
+      reply: "⚠️ No Groq API key found. Please add GROQ_API_KEY to your backend/.env file.\n\nGet a FREE key at: https://console.groq.com"
+
+    });
+
+  }
+
+
+  try {
+
+    const response = await fetch(GROQ_API_URL, {
+
+      method: "POST",
+
+      headers: {
+
+        "Authorization": `Bearer ${apiKey}`,
+
+        "Content-Type": "application/json"
+
+      },
+
+      body: JSON.stringify({
+
+        model: GROQ_MODEL,
+
+        messages: [
+
+          { role: "system", content: SYSTEM_PROMPT },
+
+          { role: "user",   content: message }
+
+        ],
+
+        temperature: 0.7,
+
+        max_tokens: 1024
+
+      })
+
+    });
+
+
+    const data = await response.json();
+
+    console.log("Groq API Response status:", response.status);
+
+
+    if (data.error) {
+
+      console.error("Groq API Error:", data.error);
+
+      return res.json({ reply: `❌ API Error: ${data.error.message}` });
+
+    }
+
+
+    const reply = data.choices?.[0]?.message?.content || "No response received.";
+
+    res.json({ reply });
+
+
+  } catch (err) {
+
+    console.error("Server error:", err);
+
+    res.json({ reply: "❌ Server error occurred. Please try again." });
+
+  }
+
+});
+
+
+// ANALYZE URL API
+
+app.post("/analyze-url", async (req, res) => {
+
+  const { url } = req.body;
+
+
+  if (!url) {
+
+    return res.json({ success: false, message: "Please provide a URL." });
+
+  }
+
+
+  const apiKey = process.env.GROQ_API_KEY;
+
+
+  if (!apiKey) {
+
+    return res.json({
+
+      success: false,
+
+      message: "⚠️ No Groq API key found. Please add GROQ_API_KEY to your .env file.\n\nGet a FREE key at: https://console.groq.com"
+
+    });
+
+  }
+
+
+  try {
+
+    // First, try to fetch the URL content
+
+    const fetchResponse = await fetch(url, {
+
+      method: "GET",
+
+      headers: {
+
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+
+      }
+
+    });
+
+
+    if (!fetchResponse.ok) {
+
+      return res.json({ success: false, message: `Failed to fetch URL. Status: ${fetchResponse.status}` });
+
+    }
+
+
+    const html = await fetchResponse.text();
+
+
+    // Extract text content from HTML (simple approach)
+
+    const text = html
+
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
+
+      .replace(/<[^>]+>/g, " ")
+
+      .replace(/\s+/g, " ")
+
+      .substring(0, 8000); // Limit to first 8000 chars for API
+
+
+    if (text.length < 50) {
+
+      return res.json({ success: false, message: "Could not extract meaningful content from this URL." });
+
+    }
+
+
+    // Send to Groq for analysis
+
+    const analysisPrompt = `You are Justice AI, a legal analysis assistant. Analyze the following content from a URL and provide:
+
+1. A brief summary of what the content is about
+
+2. Any legal relevance or implications
+
+3. Key points that might be useful for legal research
+
+
+Content:
+
+${text}`;
+
+
+    const groqResponse = await fetch(GROQ_API_URL, {
+
+      method: "POST",
+
+      headers: {
+
+        "Authorization": `Bearer ${apiKey}`,
+
+        "Content-Type": "application/json"
+
+      },
+
+      body: JSON.stringify({
+
+        model: GROQ_MODEL,
+
+        messages: [
+
+          { role: "system", content: SYSTEM_PROMPT },
+
+          { role: "user", content: analysisPrompt }
+
+        ],
+
+        temperature: 0.7,
+
+        max_tokens: 1024
+
+      })
+
+    });
+
+
+    const data = await groqResponse.json();
+
+
+    if (data.error) {
+
+      console.error("Groq API Error:", data.error);
+
+      return res.json({ success: false, message: `❌ API Error: ${data.error.message}` });
+
+    }
+
+
+    const analysis = data.choices?.[0]?.message?.content || "No analysis available.";
+
+    res.json({ success: true, analysis });
+
+
+  } catch (err) {
+
+    console.error("URL analysis error:", err);
+
+    res.json({ success: false, message: "Error analyzing URL. The site may be blocking requests or unavailable." });
+
+  }
+
+});
+
+
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => console.log(`✅ Justice AI server running on http://localhost:${PORT}`));
+
